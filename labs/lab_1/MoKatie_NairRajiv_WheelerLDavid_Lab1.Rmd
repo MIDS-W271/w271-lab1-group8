@@ -313,7 +313,7 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
 
-```{r}
+```{r warning=FALSE}
 # This might be helpful: https://cran.r-project.org/web/packages/bcaboot/vignettes/bcaboot.html
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
 
@@ -338,7 +338,7 @@ rsq <- function(data, indices) {
 # bootstrapping with 1000 replications
 results <- boot(data=df, statistic=rsq,
    R=1000)
-paste()
+
 paste("For 31 degrees CI =")
 quantile(results$t[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
