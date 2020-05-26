@@ -318,7 +318,6 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
 
 
-# function to obtain R-Squared from the data
 rsq <- function(data, indices) {
   d <- data[indices,] # allows boot to select sample
 
