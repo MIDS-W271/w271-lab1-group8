@@ -63,6 +63,8 @@ library(skimr) # for basic EDA
 library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
+library(boot)
+
 ```
 
 # Load data
@@ -314,6 +316,33 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 ```{r}
 # This might be helpful: https://cran.r-project.org/web/packages/bcaboot/vignettes/bcaboot.html
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
+
+
+# function to obtain R-Squared from the data
+rsq <- function(data, indices) {
+  d <- data[indices,] # allows boot to select sample
+
+  mod <- glm(O.ring/Number ~ Temp,
+               family = binomial(link = logit),
+               weights = Number,
+               data = d)
+  temp.31.data <- data.frame(Temp=31)
+  temp.31 <- predict(object = mod, newdata = temp.31.data,
+                      type = "response")
+
+  temp.72.data <- data.frame(Temp=72)
+  temp.72 <- predict(object = mod, newdata = temp.72.data,
+                      type = "response")  
+  return (c(temp.31, temp.72))
+}
+# bootstrapping with 1000 replications
+results <- boot(data=df, statistic=rsq,
+   R=1000)
+paste()
+paste("For 31 degrees CI =")
+quantile(results$t[,1], probs=c(0.05, 0.95))
+paste("For 72 degrees CI =")
+quantile(results$t[,2], probs=c(0.05, 0.95))
 ```
 
 
