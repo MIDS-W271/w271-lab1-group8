@@ -318,7 +318,7 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
 
 
-rsq <- function(data, indices) {
+pred.func <- function(data, indices) {
   d <- data[indices,] # allows boot to select sample
 
   mod <- glm(O.ring/Number ~ Temp,
@@ -335,7 +335,7 @@ rsq <- function(data, indices) {
   return (c(temp.31, temp.72))
 }
 # bootstrapping with 1000 replications
-results <- boot(data=df, statistic=rsq,
+results <- boot(data=df, statistic=pred.func,
    R=1000)
 
 paste("For 31 degrees CI =")
