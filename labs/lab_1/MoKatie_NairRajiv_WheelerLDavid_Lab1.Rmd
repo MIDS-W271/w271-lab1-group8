@@ -63,7 +63,7 @@ library(skimr) # for basic EDA
 library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
-library(boot)
+library(boot) # framework for bootstrapping
 
 ```
 
@@ -84,14 +84,6 @@ Conduct a thorough EDA of the data set. This should include both graphical and t
 str(df)
 ```
 
-```{r}
-# This seems like valuable code?
-df$O.ring.binary <- factor(ifelse(df$O.ring > 0,
-                                  yes = 1,
-                                  no = 0))
-#df$O.ring <- factor(df$O.ring)
-```
-
 
 - Are there any missing values? How are the data distributed?
 ```{r}
@@ -107,7 +99,7 @@ lapply(df, unique)
   - Note that O.ring includes 0,1 and 2.
   
 - How are O.Rings related to putative predictors, like temperature?
-```{r, fig.width=3, fig.height=1.5}
+```{r, fig.width=7, fig.height=3}
 ggplot(df, aes(x=Temp, y=O.ring)) +
   geom_jitter(size = 10, alpha = 0.75, height=.3, width=.3) +
   theme_classic() +
@@ -116,7 +108,7 @@ ggplot(df, aes(x=Temp, y=O.ring)) +
 
 
 - And pressure?
-```{r, fig.width=3, fig.height=1.5}
+```{r, fig.width=7, fig.height=3}
 ggplot(df, aes(x=Pressure, y=O.ring)) +
   geom_jitter(size=20, pch=20, alpha=3/4, position=position_jitter(w=0.2, h=0.1))+
   theme_classic() +
@@ -124,7 +116,7 @@ ggplot(df, aes(x=Pressure, y=O.ring)) +
 ```
 
 - How many observations are present for each level of O.ring failure?
-```{r, fig.width=2.5, fig.height=1}
+```{r}
 # Cross tabulation
 plot(table(df$O.ring),
      xlab= "Number of O-ring failures",
@@ -153,7 +145,9 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 (a) The authors use logistic regression to estimate the probability an O-ring will fail. In order to use this model, the authors needed to assume that each O-ring is independent for each launch. Discuss why this assumption is necessary and the potential problems with it. Note that a subsequent analysis helped to alleviate the authors’ concerns about independence.
 
 - The authors state that the binomial but not the binary model suffer from the assumption that each O-ring failure is independent. More specifically, the binomial model assumes that each of the six 0-rings fail independently at each temperature, $t$, and pressure, $s$. 
+
 - The independence assumption is necessary for the binomial model becuase it allows us to use the binomial probability mass function.
+
 - Moreover, the assumption is likely violated since the failure of 1 0-ring might expose other 0-rings to damaging conditions and or might exert stress on the remaining 0-rings.
 
 
@@ -192,6 +186,7 @@ model_a.2 <- glm(O.ring/Number ~ Temp + Pressure,
                family = binomial(link = logit),
                weights = Number,
                data = df)
+
 # Summary of coefficients, standard errors and p-values
 summary(model_a.2)
 ```
@@ -199,7 +194,7 @@ summary(model_a.2)
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
 
 ```{r}
-Anova(model_a, test='LR')
+Anova(model_a.2, test='LR')
 ```
 
 
@@ -383,18 +378,18 @@ With the same set of explanatory variables in your final model, estimate a linea
 - Estimation of linear regression model:
 ```{r}
 # Estimate model
-model_4 = lm(formula = Failure ~ Temp + I(Temp^2),
+model_4 = lm(formula = Failure ~ Temp,
              data = df_ind)
 # Summary
 summary(model_4)
 # Estimate model
-model_4.b = lm(formula = O.ring/Number ~ Temp + I(Temp^2),
-             data = df)
+model_4.b = lm(formula = O.ring/Number ~ Temp,
+             data = df, weights = Number)
 # Summary
 summary(model_4.b)
 ```
 
-- Explaination of the model results:
+- Explanation of the model results:
 
 
 - Model diagnostics:
