@@ -313,8 +313,9 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
 
 
-pred.func <- function(data, indices) {
-  d <- data[indices,] # allows boot to select sample
+pred.func <- function(seq, data) {
+  indices <- sample(1:23, replace=TRUE)
+  d <- data[sample(1:nrow(data), 23,replace=TRUE),]  
 
   mod <- glm(O.ring/Number ~ Temp,
                family = binomial(link = logit),
@@ -329,15 +330,18 @@ pred.func <- function(data, indices) {
                       type = "response")  
   return (c(temp.31, temp.72))
 }
-# bootstrapping with 1000 replications
-results <- boot(data=df, statistic=pred.func,
-   R=1000)
+ci_list <- lapply(1:10, pred.func, df)
+
+results <- do.call(rbind,ci_list)
 
 paste("For 31 degrees CI =")
-quantile(results$t[,1], probs=c(0.05, 0.95))
+quantile(results[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
-quantile(results$t[,2], probs=c(0.05, 0.95))
+quantile(results[,2], probs=c(0.05, 0.95))
+
 ```
+
+
 
 
 
