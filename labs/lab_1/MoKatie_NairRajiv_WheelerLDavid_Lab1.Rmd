@@ -52,7 +52,7 @@ geometry: margin=1in
 Carefullly read the Dalal et al (1989) paper (Skip Section 5).
 
 # Load libraries
-```{r}
+```{r warning=FALSE, message=FALSE}
 library(ggplot2) # for plotting
 library(GGally) # for scatterplot matrices
 library(gridExtra) # for arranging multiple plots together
@@ -78,32 +78,36 @@ df = read.table("challenger.csv",
 Conduct a thorough EDA of the data set. This should include both graphical and tabular analysis as taught in this course. Output-dump (that is, graphs and tables that don't come with explanations) will result in a very low, if not zero, score. Since the report has a page-limit, you will have to be selective when choosing visuals to illustrate your key points, associated with a concise explanation of the visuals. This EDA should begin with an inspection of the given dataset; examination of anomalies, missing values, potential of top and/or bottom code etc.   
 
 # EDA
-- What is the structure of the data?
+  To understand the data, their structure, range of values, and patterns, we first inspected the structure of the data:
 ```{r}
 # Structure
 str(df)
 ```
+  Note that the data are a 23 x 5 dimensional data.frame. Each of the 5 variables are treated as `int` classes. For now, this is OK, however, we may transform O.ring into a binary factor for subsequent analyses.
 
-
-- Are there any missing values? How are the data distributed?
+  Next, we inspected basic summary statistics, missing observations, and histograms of the 5 variables:
 ```{r}
 # Summary statistics
 skim(df)
 ```
+  Note that there are no missing observations. Moreover, the putative explanatory variables, `Temp` and `Pressure` are skewed. Likewise, the dependent variable `O.ring` is positively skewed.
 
-- What are the unique values?
+  To ensure that the data do not contain anomolous observations, we next inspected the unique values for each variable:
 ```{r}
 # What are the unique values
 lapply(df, unique)
 ```
-  - Note that O.ring includes 0,1 and 2.
+  The values for each variable seem reasonable.
   
 - How are O.Rings related to putative predictors, like temperature?
 ```{r, fig.width=7, fig.height=3}
-ggplot(df, aes(x=Temp, y=O.ring)) +
-  geom_jitter(size = 10, alpha = 0.75, height=.3, width=.3) +
+ggplot(df, aes(x=Temp, y=O.ring, colour= O.ring>0)) +
+  geom_jitter(size = 10, alpha = 0.75, height=.1, width=.3) +
+  scale_color_hue(l=5, c=15) +
   theme_classic() +
-  theme(text = element_text(size = 20)) 
+  theme(text = element_text(size = 20)) +
+  geom_text(x=80, y=1.9, size=15, label="Figure 1") +
+  theme(legend.position = "none")
 ```
 
 
@@ -112,7 +116,8 @@ ggplot(df, aes(x=Temp, y=O.ring)) +
 ggplot(df, aes(x=Pressure, y=O.ring)) +
   geom_jitter(size=20, pch=20, alpha=3/4, position=position_jitter(w=0.2, h=0.1))+
   theme_classic() +
-  theme(text = element_text(size = 20)) 
+  theme(text = element_text(size = 20)) +
+  geom_text(x=190, y=1.9, size=15, label="Figure 2")
 ```
 
 - How many observations are present for each level of O.ring failure?
@@ -122,12 +127,20 @@ plot(table(df$O.ring),
      xlab= "Number of O-ring failures",
      ylab= "Counts",
      lwd=10)
+text(x=1.9, y=14,labels = "Figure 3", cex=0.9)
 ```
 
 - At what temperature do 2 O.rings fail?
 ```{r}
 # Cross tabulation
 table(df$O.ring, df$Temp)
+## At what temperatures are there 0,1 and 2 failures
+# 0 
+sort(df$Temp[df$O.ring == 0])
+# 1
+sort(df$Temp[df$O.ring == 1])
+# 2
+sort(df$Temp[df$O.ring == 2])
 ```
 
 
@@ -171,40 +184,40 @@ for(i in array(1:nrow(df))){
 
 - Logistic regression
 ```{r}
-# Estimate logistic regression model
-model_a <- glm(Failure ~ Temp + Pressure,
-               family = binomial(link = logit),
-               data = df_ind)
-# Summary of coefficients, standard errors and p-values
-summary(model_a)
-
-# vs
-
+# # Estimate logistic regression model
+# model_a <- glm(Failure ~ Temp + Pressure,
+#                family = binomial(link = logit),
+#                data = df_ind)
+# # Summary of coefficients, standard errors and p-values
+# summary(model_a)
+# 
+# # vs
 ## Binomial model with weights
 # Estimate logistic regression model
-model_a.2 <- glm(O.ring/Number ~ Temp + Pressure,
+model_a <- glm(O.ring/Number ~ Temp + Pressure,
                family = binomial(link = logit),
                weights = Number,
                data = df)
 
 # Summary of coefficients, standard errors and p-values
-summary(model_a.2)
+summary(model_a)
 ```
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
 
+  Below we test: $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for both `Temp` and `Pressure`:
 ```{r}
-Anova(model_a.2, test='LR')
+Anova(model_a, test='LR')
 ```
-
+  As discussed below `Temp` but not `Pressure` is important for the model.
 
 (d) The authors chose to remove Pressure from the model based on the LRTs. Based on your results, discuss why you think this was done. Are there any potential problems with removing this variable?
 
 - `Pressure` is not an important explanatory variable. 
 - Above, we tested $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for `Pressure`.The $-2log(\Lambda)$ = `r Anova(model_a, test='LR')[2,1]` and the *p*-value of $P(\chi^2_1 > $`r Anova(model_a, test='LR')[2,1]`) = `r Anova(model_a, test='LR')[2,3]` > $\alpha$ 0.05. 
-- Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test.
-- Although it was removed, it *could* be an important covariate to include in the model. 
-- **Problems that might arise from the removal of this variable include**
+- Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test & because it does not contribute much systematic variation to the model (i.e `Pressure` can only take values `r unique(df$Pressure)`). 
+- Although it was removed, it *could* be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Thus, it seems like `Pressure` could contribute to the mechanism by which `O.rings` fail.
+- **Problems that might arise from the removal of this variable include- omitted variable?**
 
 **Part 3 (35 points)**
 
@@ -216,19 +229,12 @@ Continuing Exercise 4, consider the simplified model $logit(\pi) = \beta_0 +  \b
 
 ```{r}
 # Estimate logistic regression model
-model_b <- glm(Failure ~ Temp ,
-               family = binomial(link = logit),
-               data = df_ind)
-# Summary
-summary(model_b)
-# Equivalently
-# Estimate logistic regression model
-model_b.2 <- glm(O.ring/Number ~ Temp,
+model_b <- glm(O.ring/Number ~ Temp,
                family = binomial(link = logit),
                weights = Number,
                data = df)
 # Summary of coefficients, standard errors and p-values
-summary(model_b.2)
+summary(model_b)
 ```
 
 
@@ -242,6 +248,8 @@ plot(df$Temp, df$O.ring/df$Number,
      pch=20, cex=2,
      xlim=c(31,81),
      ylim=c(0,1))
+# Figure legend
+text(x=75, y=0.9,labels = "Figure 4", cex=0.9)
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
@@ -251,7 +259,24 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
 
 
 - (2) Expected number of failures vs. Temp.
-
+```{r}
+plot(df$Temp, df$O.ring,
+     xlab='Temperature',
+     ylab="Expected number of O-ring failures",
+     pch=20, cex=2,
+     col=ifelse(test=df$O.ring > 0, 
+                yes="black",
+                no="grey45"),
+     xlim=c(31,81),
+     ylim=c(0,6))
+# Figure legend
+text(x=75, y=5.5,labels = "Figure 5", cex=0.9)
+# Betas
+b0 <- model_b$coefficients[1]
+b1 <- model_b$coefficients[2]
+# Curve
+curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x))*6, add=T)
+```
 
 (c) Include the 95% Wald confidence interval bands for $\pi$ on the plot. Why are the bands much wider for lower temperatures than for higher temperatures?
 
@@ -273,6 +298,9 @@ plot(df$Temp, df$O.ring/df$Number,
      pch=20, cex=2,
      xlim=c(31,81),
      ylim=c(0,1))
+# Figure legend
+text(x=75, y=0.9,labels = "Figure 6", cex=0.9)
+# Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
 curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
@@ -346,24 +374,18 @@ quantile(results$t[,2], probs=c(0.05, 0.95))
 - Add quadratic temperature term
 ```{r}
 # Estimate logistic regression model
-model_3f <- glm(Failure ~ Temp + I(Temp^2),
-               family = binomial(link = logit),
-               data = df_ind)
-# Summary of coefficients, standard errors and p-values
-summary(model_3f)
-# Estimate logistic regression model
-model_3f.2 <- glm(O.ring/Number ~ Temp + I(Temp^2),
+model_3f <- glm(O.ring/Number ~ Temp + I(Temp^2),
                family = binomial(link = logit),
                weights = Number,
                data = df)
 # Summary of coefficients, standard errors and p-values
-summary(model_3f.2)
+summary(model_3f)
 
 ```
 - Conduct LRT:
 ```{r}
 # Compare models with LRT
-anova(model_b.2, model_3f.2,
+anova(model_b, model_3f,
       test="Chisq")
 ```
 
@@ -378,15 +400,10 @@ With the same set of explanatory variables in your final model, estimate a linea
 - Estimation of linear regression model:
 ```{r}
 # Estimate model
-model_4 = lm(formula = Failure ~ Temp,
-             data = df_ind)
-# Summary
-summary(model_4)
-# Estimate model
-model_4.b = lm(formula = O.ring/Number ~ Temp,
+model_4 = lm(formula = O.ring/Number ~ Temp,
              data = df, weights = Number)
 # Summary
-summary(model_4.b)
+summary(model_4)
 ```
 
 - Explanation of the model results:
@@ -395,8 +412,15 @@ summary(model_4.b)
 - Model diagnostics:
 ```{r}
 # diagnotics
-plot(model_4, 
+plot(model_4, which=1,
      pch=20, cex=2)
+# Figure legend
+text(x=0.18, y=0.3,labels = "Figure 7", cex=0.9)
+# diagnotics
+plot(model_4, which=2,
+     pch=20, cex=2)
+# Figure legend
+text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
 ```
 
 - Assess the validity of the model assumptions:
@@ -405,14 +429,7 @@ plot(model_4,
   - **Assumption MLR.2 (Random Sampling):**
     - It seems doubtful that these O-rings were sampled randomly, or even *sampled* at all- **all** O-rings were likely collected from `r max(df$Flight)` flights. Further survival bias could be introduced by the inability of NASA to collect all O-rings from flights that malfunctioned.
   - **Assumption MLR.3 (No Perfect Collinearity):**
-    - From below we can see that the two explanatory variables- `Temp` and `Temp`$^2$- are nearly perfectly correlated, with a correlation of `r cor.test(df$Temp, df$Temp^2)$estimate`.
-```{r warning=FALSE, message=FALSE}
-# Scatterplot
-plot(jitter(df$Temp, 0.001), jitter(df$Temp^2,1),
-     pch=20, cex=2,
-     xlab="Temperature", ylab=expression(paste("Temperature"^"2")),
-     data=df)
-```
+    - ince there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
   - **Assumption MLR.4 (Zero Conditional Mean):**
     - The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot: `r plot(model_4, which=1, pch=19, cex=1, cex.lab=1, cex.main=4, lwd=2)` documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
   - **Assumption MLR.5 (Homoskedasticity):**
