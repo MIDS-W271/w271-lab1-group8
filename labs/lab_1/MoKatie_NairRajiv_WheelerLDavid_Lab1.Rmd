@@ -341,8 +341,8 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
 
 
-pred.func <- function(data, indices) {
-  d <- data[indices,] # allows boot to select sample
+pred.func <- function(seq, data) {
+  d <- data[sample(1:nrow(data), 23,replace=TRUE),]  
 
   mod <- glm(O.ring/Number ~ Temp,
                family = binomial(link = logit),
@@ -357,15 +357,18 @@ pred.func <- function(data, indices) {
                       type = "response")  
   return (c(temp.31, temp.72))
 }
-# bootstrapping with 1000 replications
-results <- boot(data=df, statistic=pred.func,
-   R=1000)
+ci_list <- lapply(1:1000, pred.func, df)
+
+results <- do.call(rbind,ci_list)
 
 paste("For 31 degrees CI =")
-quantile(results$t[,1], probs=c(0.05, 0.95))
+quantile(results[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
-quantile(results$t[,2], probs=c(0.05, 0.95))
+quantile(results[,2], probs=c(0.05, 0.95))
+
 ```
+
+
 
 
 
@@ -423,7 +426,7 @@ plot(model_4, which=2,
 text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
 ```
 
-- Assess the validity of the model assumptions:
+- Assess the validity of the model assumptions: 
   - **Assumption MLR.1 (Linear in Parameters):**
     - The model is linear in its parameters.The $\hat{\beta} s$ are expressed as additive/linear functions of the response: O-ring failure.
   - **Assumption MLR.2 (Random Sampling):**
