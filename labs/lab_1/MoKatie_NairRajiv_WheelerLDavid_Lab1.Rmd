@@ -330,7 +330,7 @@ pred.func <- function(seq, data) {
                       type = "response")  
   return (c(temp.31, temp.72))
 }
-ci_list <- lapply(1:10, pred.func, df)
+ci_list <- lapply(1:1000, pred.func, df)
 
 results <- do.call(rbind,ci_list)
 
