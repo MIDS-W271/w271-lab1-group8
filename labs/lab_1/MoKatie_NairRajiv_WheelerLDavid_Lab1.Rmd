@@ -314,7 +314,6 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 
 
 pred.func <- function(seq, data) {
-  indices <- sample(1:23, replace=TRUE)
   d <- data[sample(1:nrow(data), 23,replace=TRUE),]  
 
   mod <- glm(O.ring/Number ~ Temp,
