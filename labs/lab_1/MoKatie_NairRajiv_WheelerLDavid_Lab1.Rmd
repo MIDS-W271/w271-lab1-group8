@@ -313,25 +313,36 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 # http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
 
 
-pred.func <- function(seq, data) {
-  d <- data[sample(1:nrow(data), 23,replace=TRUE),]  
+# Do not change original # of failures
+df[, "O.ring2"] = df$O.ring
 
-  mod <- glm(O.ring/Number ~ Temp,
+results <- data.frame(pred.31 = numeric(), pred.72 = numeric())
+for (s in 1:10){
+  I.sample <- sample(1:nrow(df), 23,replace=TRUE)
+  d <- df[I.sample,]  
+
+  mod <- glm(O.ring2/Number ~ Temp,
                family = binomial(link = logit),
                weights = Number,
                data = d)
+  
+  z = mod$coefficients["(Intercept)"] + mod$coefficients["Temp"] * d$Temp
+
+  pi = 1/(1+exp(-z))
+  pi.O.ring <- rbinom(23, 6, prob=pi)
+  
+  #update the failures generated from model
+  df[I.sample,"O.ring2"] <- pi.O.ring
   temp.31.data <- data.frame(Temp=31)
   temp.31 <- predict(object = mod, newdata = temp.31.data,
                       type = "response")
 
   temp.72.data <- data.frame(Temp=72)
   temp.72 <- predict(object = mod, newdata = temp.72.data,
-                      type = "response")  
-  return (c(temp.31, temp.72))
+                      type = "response")
+  results <- results %>% add_row(pred.31 = temp.31, pred.72 = temp.72)  
 }
-ci_list <- lapply(1:1000, pred.func, df)
 
-results <- do.call(rbind,ci_list)
 
 paste("For 31 degrees CI =")
 quantile(results[,1], probs=c(0.05, 0.95))
