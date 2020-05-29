@@ -82,6 +82,14 @@ Conduct a thorough EDA of the data set. This should include both graphical and t
 ```{r}
 # Structure
 str(df)
+# Create binary column for O.ring failture
+df$O.ringBinary = ifelse(test = df$O.ring > 0,
+                         yes = 1, 
+                         no = 0)
+# Convert O.ringBinary to factor
+df$O.ringBinary = as.factor(df$O.ringBinary)
+# Sanity check
+str(df)
 ```
   Note that the data are a 23 x 5 dimensional data.frame. Each of the 5 variables are treated as `int` classes. For now, this is OK, however, we may transform O.ring into a binary factor for subsequent analyses.
 
@@ -102,13 +110,19 @@ lapply(df, unique)
 - How are O.Rings related to putative predictors, like temperature?
 ```{r, fig.width=7, fig.height=3}
 ggplot(df, aes(x=Temp, y=O.ring, colour= O.ring>0)) +
-  geom_jitter(size = 10, alpha = 0.75, height=.1, width=.3) +
+  geom_jitter(size = 10, alpha = 0.75, height=.05, width=.3) +
   scale_color_hue(l=5, c=15) +
   theme_classic() +
   theme(text = element_text(size = 20)) +
   geom_text(x=80, y=1.9, size=15, label="Figure 1") +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +  
+  theme(
+  axis.title.x = element_text(size = 50),
+  axis.text.x = element_text(size = 35),
+  axis.title.y = element_text(size = 50),
+  axis.text.y = element_text(size = 35))
 ```
+
 
 
 - And pressure?
@@ -117,7 +131,12 @@ ggplot(df, aes(x=Pressure, y=O.ring)) +
   geom_jitter(size=20, pch=20, alpha=3/4, position=position_jitter(w=0.2, h=0.1))+
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  geom_text(x=190, y=1.9, size=15, label="Figure 2")
+  geom_text(x=190, y=1.9, size=15, label="Figure 2")+
+  theme(
+  axis.title.x = element_text(size = 50),
+  axis.text.x = element_text(size = 35),
+  axis.title.y = element_text(size = 50),
+  axis.text.y = element_text(size = 35))
 ```
 
 - How many observations are present for each level of O.ring failure?
@@ -218,6 +237,7 @@ Anova(model_a, test='LR')
 - Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test & because it does not contribute much systematic variation to the model (i.e `Pressure` can only take values `r unique(df$Pressure)`). 
 - Although it was removed, it *could* be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Thus, it seems like `Pressure` could contribute to the mechanism by which `O.rings` fail.
 - **Problems that might arise from the removal of this variable include- omitted variable?**
+- Mechanistic or statistical
 
 **Part 3 (35 points)**
 
@@ -369,6 +389,98 @@ quantile(results[,2], probs=c(0.05, 0.95))
 ```
 
 
+ˆ- Bootstrapping
+```{r, warnings=F}
+# Estimate Binary logistic regression Model
+model_3b = glm(O.ringBinary ~ Temp,
+               family = binomial(link = logit),
+               data = df)
+
+# Number of bootstrap samples
+Bn = 1000                
+# E.m = empty B.n x n matrix for estimates
+E.m = matrix(nrow = Bn, ncol = length(coef(model_3b)) + 2,
+           dimnames = list(paste("Sample",1:Bn), 
+                           c(names(coef(model_3b)), "t.31", "t.72")))
+# For each bootstrap sample
+for(i in 1:Bn){
+    # sample credit data with replacement
+    bs.df = df[sample(x = 1:nrow(df),
+                          size = nrow(df),
+                          replace = TRUE), ]
+    
+    # Fit model on the boostrapped sample
+    bs.logit = glm(model_3b$formula,
+                     family = binomial(link = "logit"),
+                                          data=bs.df)
+    # Store  coefficients
+    E.m[i,] = coef(bs.logit)
+    
+    # Confidence interval code from Rajiv
+    # Temp = 31
+    temp.31.data <- data.frame(Temp=31)
+    # Store confidence interval in column 3
+    E.m[i, 3] <- predict(object = bs.logit , newdata = temp.31.data,
+                        type = "response")
+
+    # Temp = 72
+    temp.72.data <- data.frame(Temp=72)
+    # Store confidence interval in column 4
+    E.m[i, 4] <- predict(object = bs.logit , newdata = temp.72.data,
+                        type = "response")
+}
+
+paste("For 31 degrees CI =")
+quantile(E.m[,3], probs=c(0.05, 0.95))
+paste("For 72 degrees CI =")
+quantile(E.m[,4], probs=c(0.05, 0.95))
+ 
+```
+
+```{r}
+# Estimate Binary logistic regression Model
+model_3b = glm(O.ringBinary ~ Temp,
+               family = binomial(link = logit),
+               data = df)
+
+
+# Number of bootstrap samples
+Bn = 10
+# E.m = empty B.n x n matrix for estimates
+E.m = matrix(nrow = Bn, ncol = length(coef(model_3b)) + 2,
+           dimnames = list(paste("Sample", 1:Bn), 
+                           c(names(coef(model_3b)), "T31", "T72")))
+
+# For each sample
+for(i in 1:Bn){
+    # sample all rows and columns of interest with replacement
+    BS.df = df[sample(x = 1:nrow(df), 
+                          size = nrow(df),
+                          replace = TRUE),
+                   c(2,6) ]
+    # Estimate the model with the boostrapped sample as data
+    BS.model = glm(model_3b$formula, 
+                     family = binomial(link = "logit"),
+                     data = BS.df)
+    # store the coefficients
+    E.m[i,] = coef(BS.model)
+    
+    # Confidence interval codel from Rajiv
+    # Temp = 31
+    temp.31.data <- data.frame(Temp=31)
+    E.m[i, 3] <- predict(object = BS.model, newdata = temp.31.data,
+                        type = "response")
+
+    # Temp = 72
+    temp.72.data <- data.frame(Temp=72)
+    E.m[i, 4] <- predict(object = BS.model, newdata = temp.72.data,
+                        type = "response")
+    
+    return (c(temp.31, temp.72))
+}
+
+ 
+```
 
 
 
