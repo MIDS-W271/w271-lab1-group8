@@ -579,7 +579,7 @@ text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
 
 Interpret the main result of your final model in terms of both odds and probability of failure. Summarize the final result with respect to the question(s) being asked and key takeaways from the analysis.
 
-Our final model model is $$logit\left(\cfrac{O.ring}{Number}\right) = 5.085 - 0.116 Temp$$
+Our final model model is $$logit\left(\hat\pi\right) = 5.085 - 0.116 Temp$$
 
 
 This represents the log odds of the fraction of orings that fail. To calculate the odds, we exponentiate the coefficients as below. 
@@ -589,5 +589,9 @@ This represents the log odds of the fraction of orings that fail. To calculate t
 exp(model_b$coefficients)
 ```
 
-Here we see that an increase in temperature changes the odds of the ratio of failures by 0.89 for each degree increase, which could also be interpreted as a unit decrease in temperature increases the odds of failures.
+Here we see that an increase in temperature changes the odds of failure by 0.89 times for each degree increase. In other words, a unit decrease in temperature increases the odds of failure increases by 1.11 times for each unit temperature decrease.
+
+In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F and 30F, we see probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
+
+
 
