@@ -227,16 +227,17 @@ Continuing Exercise 4, consider the simplified model $logit(\pi) = \beta_0 +  \b
 
 (a) Estimate the model.
 
-```{r}
+```{r warning=FALSE}
 # Estimate logistic regression model
 model_b <- glm(O.ring/Number ~ Temp,
                family = binomial(link = logit),
                weights = Number,
                data = df)
 # Summary of coefficients, standard errors and p-values
-summary(model_b)
+stargazer(model_b, type="text")
 ```
 
+$$logit\left(\cfrac{O.ring}{Number}\right) = 5.085 - 0.116 Temp$$
 
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
@@ -330,8 +331,7 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 
 - Thus, the probability of O-ring failure is `r predict(object = model_b, newdata = predict.data, type = "response")` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
 - The assumptions needed to apply the inference procedures are:
-  - 
-  -
+  - We are assuming a linear relationship between the log odds of failure of an o-ring and Temperature.
   
 
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
@@ -356,7 +356,7 @@ for (s in 1:10){
   
   z = mod$coefficients["(Intercept)"] + mod$coefficients["Temp"] * d$Temp
 
-  pi = 1/(1+exp(-z))
+  pi = exp(z)/(1+exp(z))
   pi.O.ring <- rbinom(23, 6, prob=pi)
   
   #update the failures generated from model
@@ -386,16 +386,19 @@ quantile(results[,2], probs=c(0.05, 0.95))
 (f) Determine if a quadratic term is needed in the model for the temperature.
 
 - Add quadratic temperature term
-```{r}
+```{r warning=FALSE}
 # Estimate logistic regression model
 model_3f <- glm(O.ring/Number ~ Temp + I(Temp^2),
                family = binomial(link = logit),
                weights = Number,
                data = df)
 # Summary of coefficients, standard errors and p-values
-summary(model_3f)
+stargazer(model_3f, type="text")
 
 ```
+
+$$ logit\left(\cfrac{O.ring}{Number}\right)=22.126 -0.651Temp + 0.004Temp^2 $$ 
+
 - Conduct LRT:
 ```{r}
 # Compare models with LRT
@@ -412,13 +415,16 @@ anova(model_b, model_3f,
 With the same set of explanatory variables in your final model, estimate a linear regression model. Explain the model results; conduct model diagnostic; and assess the validity of the model assumptions.  Would you use the linear regression model or binary logistic regression in this case?  Explain why.
 
 - Estimation of linear regression model:
-```{r}
+```{r warning=FALSE}
 # Estimate model
 model_4 = lm(formula = O.ring/Number ~ Temp,
              data = df, weights = Number)
 # Summary
-summary(model_4)
+stargazer(model_4, type="text")
 ```
+
+$$ \cfrac{O.ring}{Number} = 0.616 - 0.008Temp$$
+
 
 - Explanation of the model results:
 
@@ -460,3 +466,16 @@ text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
 **Part 5 (10 points)**
 
 Interpret the main result of your final model in terms of both odds and probability of failure. Summarize the final result with respect to the question(s) being asked and key takeaways from the analysis.
+
+Our final model model is $$logit\left(\cfrac{O.ring}{Number}\right) = 5.085 - 0.116 Temp$$
+
+
+This represents the log odds of the fraction of orings that fail. To calculate the odds, we exponentiate the coefficients as below. 
+
+
+```{r}
+exp(model_b$coefficients)
+```
+
+Here we see that an increase in temperature changes the odds of the ratio of failures by 0.89 for each degree increase, which could also be interpreted as a unit decrease in temperature increases the odds of failures.
+
