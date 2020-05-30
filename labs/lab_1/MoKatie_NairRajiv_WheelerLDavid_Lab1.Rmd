@@ -64,7 +64,7 @@ library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
 library(boot) # framework for bootstrapping
-
+library(plotly) # For 3d scatterplot
 ```
 
 # Load data
@@ -114,10 +114,10 @@ ggplot(as.data.frame(table(df)),
        aes(x = as.factor(O.ring), y = Freq, colour=O.ring>0)) + 
     geom_bar(stat="identity", width=0.1, alpha =0.7, color = "black", fill= "olivedrab") +
     scale_x_discrete(name = "Number of O-ring failures")+
-    scale_y_continuous(name = "Frequency")+
+    scale_y_continuous(name = "Counts")+
    theme_classic() +
    theme(text = element_text(size = 20)) +
-   labs(title="Figure 1: Distribution of O-ring failures")+
+   labs(title=expression(~bold('Figure 1:')~'Distribution of O-ring failures'))+
    theme(legend.position = "top") +  
    theme(plot.title = element_text(hjust=0)) + 
    theme(
@@ -140,7 +140,7 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  labs(title="Figure 2: O-ring failure as a function of temperature (°F)",
+  labs(title=expression(~bold('Figure 2:')~'O-ring failure as a function of temperature (°F)'),
        color="Observations:")+
   theme(legend.position = "top") +  
   theme(plot.title = element_text(hjust=0)) + 
@@ -164,8 +164,8 @@ ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
     geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-    labs(title="Figure 3: O-ring failure as a function of pressure",
-       color="Observations:")+
+  labs(title=expression(~bold('Figure 3:')~' O-ring failure as a function of pressure'),
+     color="Observations:")+
   theme(legend.position = "top") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
@@ -187,8 +187,8 @@ ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-    labs(title="Figure 4: O-ring failure as a function of flight number/time",
-       color="Observations:")+
+  labs(title=expression(~bold('Figure 4:')~' O-ring failure as a function of flight number/time'),
+   color="Observations:")+
   theme(legend.position = "top") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
@@ -197,6 +197,29 @@ ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
   axis.title.y = element_text(size = 35),
   axis.text.y = element_text(size = 30),
   plot.title = element_text(size = 35))
+```
+
+- How do both `Temp` and `Pressure` affect `O.ring` failure?
+```{r}
+# Specify levels of O.ring failure
+df$O.ring[which(df$O.ring == 0)] <- 0
+df$O.ring[which(df$O.ring == 1)] <- 1
+df$O.ring[which(df$O.ring == 2)] <- 2
+# Define 3 level factor of O.ring failures
+df$O.ringFactor <- as.factor(df$O.ring)
+# Sanity check
+levels(df$O.ringFactor)
+
+# Build 3d scatter plot
+fig <- plot_ly(df, x = ~ Temp, y = ~ Pressure, z = ~ O.ringFactor,
+               color = ~ O.ringFactor,
+               colors = c('olivedrab', 'orange2',"orangered2"))
+fig <- fig %>% add_markers()
+fig <- fig %>% layout(scene = list(xaxis = list(title = 'Temperature (°F)'),
+                     yaxis = list(title = 'Pressure'),
+                     zaxis = list(title = 'Number of O-ring failures')))
+
+fig
 ```
 
 
@@ -238,7 +261,6 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 
 ```{r}
 #create a dataset that assumes that each of the 6 primary field O-rings on a flight is an independent data point
-
 df_ind <- data.frame()
 
 for(i in array(1:nrow(df))){
@@ -253,7 +275,7 @@ for(i in array(1:nrow(df))){
 ```
 
 - Logistic regression
-```{r}
+```{r, warning=F}
 # # Estimate logistic regression model
 # model_a <- glm(Failure ~ Temp + Pressure,
 #                family = binomial(link = logit),
@@ -274,7 +296,7 @@ stargazer(model_a,
           type="text")
 ```
 
-$$ logit\left(\cfrac{O.ring}{Number}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$ 
+$$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$ 
 
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
@@ -311,7 +333,7 @@ model_b <- glm(O.ring/Number ~ Temp,
 stargazer(model_b, type="text")
 ```
 
-$$logit\left(\cfrac{O.ring}{Number}\right) = 5.085 - 0.116 Temp$$
+$$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
 
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
@@ -408,8 +430,8 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 
 - Thus, the probability of O-ring failure is `r predict(object = model_b, newdata = predict.data, type = "response")` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
 - The assumptions needed to apply the inference procedures are:
-  - We are assuming a linear relationship between the log odds of failure of an o-ring and Temperature.
-  - We are assuming that the observations are independent. i.e. The failure of one o-ring does not increase the odds of the other to fail
+  - We are assuming a linear relationship between the log odds of failure of an O-ring and Temperature.
+  - We are assuming that the observations are independent. i.e. The failure of one O-ring does not increase the odds of the other to fail
   
 
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
@@ -426,7 +448,6 @@ Do the following steps in a loop (1..100):
 * run predictions for 31 and 72 degrees and save results
 
 At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
-
 
 ```{r warning=FALSE}
 # Do not change original # of failures
