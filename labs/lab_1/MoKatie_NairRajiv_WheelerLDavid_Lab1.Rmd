@@ -108,7 +108,7 @@ lapply(df, unique)
   The values for each variable seem reasonable.
  
 - How many observations are present for each level of O.ring failure?
-```{r, fig.width=4, fig.height=2.75}
+```{r, fig.width=4, fig.height=2.5}
 # Cross tabulation
 ggplot(as.data.frame(table(df)),
        aes(x = as.factor(O.ring), y = Freq, colour=O.ring>0)) + 
@@ -438,12 +438,12 @@ for (s in 1:1000){
   # Z is the the beta0 + beta1X
   z = mod$coefficients["(Intercept)"] + mod$coefficients["Temp"] * d$Temp
 
-  # Pi is log of the odds
+  # Pi is the binary Logistic Regression
   pi = exp(z)/(1+exp(z))
   # Generate new pi values from pi values generated with bootstrap samples
-  pi.O.ring <- rbinom(n=23,
-                      size=6,
-                      prob=pi)
+  pi.O.ring <- rbinom(n=23, # sample size
+                      size=6, # number of trials
+                      prob=pi) # probability
   
   # update the failures generated from model
   df[I.sample,"O.ring2"] <- pi.O.ring
@@ -464,55 +464,6 @@ quantile(results[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
 quantile(results[,2], probs=c(0.05, 0.95))
 
-```
-
-
-- Bootstrapping
-```{r, warnings=F}
-# # Estimate Binary logistic regression Model
-# model_3b = glm(O.ringBinary ~ Temp,
-#                family = binomial(link = logit),
-#                data = df)
-# 
-# # Number of bootstrap samples
-# Bn = 1000                
-# # E.m = empty B.n x n matrix for estimates
-# E.m = matrix(nrow = Bn, ncol = length(coef(model_3b)) + 2,
-#            dimnames = list(paste("Sample",1:Bn), 
-#                            c(names(coef(model_3b)), "t.31", "t.72")))
-# # For each bootstrap sample
-# for(i in 1:Bn){
-#     # sample credit data with replacement
-#     bs.df = df[sample(x = 1:nrow(df),
-#                           size = nrow(df),
-#                           replace = TRUE), ]
-#     
-#     # Fit model on the boostrapped sample
-#     bs.logit = glm(model_3b$formula,
-#                      family = binomial(link = "logit"),
-#                                           data=bs.df)
-#     # Store  coefficients
-#     E.m[i,] = coef(bs.logit)
-#     
-#     # Confidence interval code from Rajiv
-#     # Temp = 31
-#     temp.31.data <- data.frame(Temp=31)
-#     # Store confidence interval in column 3
-#     E.m[i, 3] <- predict(object = bs.logit , newdata = temp.31.data,
-#                         type = "response")
-# 
-#     # Temp = 72
-#     temp.72.data <- data.frame(Temp=72)
-#     # Store confidence interval in column 4
-#     E.m[i, 4] <- predict(object = bs.logit , newdata = temp.72.data,
-#                         type = "response")
-# }
-# 
-# paste("For 31 degrees CI =")
-# quantile(E.m[,3], probs=c(0.05, 0.95))
-# paste("For 72 degrees CI =")
-# quantile(E.m[,4], probs=c(0.05, 0.95))
- 
 ```
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
