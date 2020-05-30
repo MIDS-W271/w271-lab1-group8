@@ -421,8 +421,8 @@ Do the following steps in a loop (1..100):
 * fit the model using the above points
 * Calculate Z using intercept + coefTemp * Temp This results in a vector of 23 values
 * Calculate pi using exp(z) / (1+exp(z)) (vector of size 23)
-* enerate array(23) of binomials 0-6 using the built in rbinom function
-* replace o.ring2 with above generated binom values, updating only the rows corresponding to sample
+* Generate vector of size 23 of binomials 0-6 using the built in rbinom function by passing in the pi's generated in prior step.
+* replace o.ring2 with above generated binom values, updating only the row numbers corresponding to sample.
 * run predictions for 31 and 72 degrees and save results
 
 At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
