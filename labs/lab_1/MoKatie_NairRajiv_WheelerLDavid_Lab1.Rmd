@@ -409,9 +409,24 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 - Thus, the probability of O-ring failure is `r predict(object = model_b, newdata = predict.data, type = "response")` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
 - The assumptions needed to apply the inference procedures are:
   - We are assuming a linear relationship between the log odds of failure of an o-ring and Temperature.
+  - We are assuming that the observations are independent. i.e. The failure of one o-ring does not increase the odds of the other to fail
   
 
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
+
+For parametric bootstrap, we do the following steps.
+create new column o.ring2 and initialize to o.ring. This column will be updated in each iteration.
+Do the following steps in a loop (1..100):
+* sample 23 points from dataset with replacement
+* fit the model using the above points
+* Calculate Z using intercept + coefTemp * Temp This results in a vector of 23 values
+* Calculate pi using exp(z) / (1+exp(z)) (vector of size 23)
+* enerate array(23) of binomials 0-6 using the built in rbinom function
+* replace o.ring2 with above generated binom values, updating only the rows corresponding to sample
+* run predictions for 31 and 72 degrees and save results
+
+At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
+
 
 ```{r warning=FALSE}
 # Do not change original # of failures
@@ -421,7 +436,7 @@ df[, "O.ring2"] = df$O.ring
 results <- data.frame(pred.31 = numeric(), pred.72 = numeric())
 
 # For each sample in 1:n
-for (s in 1:1000){
+for (s in 1:10){
   # Collect sample of size 23 from the whole data frame with replacement
   I.sample <- sample(x = 1:nrow(df),
                      size = 23,
@@ -562,7 +577,7 @@ exp(model_b$coefficients)
 
 Here we see that an increase in temperature changes the odds of failure by 0.89 times for each degree increase. In other words, a unit decrease in temperature increases the odds of failure increases by 1.11 times for each unit temperature decrease.
 
-In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F and 30F, we see probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
+In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
 
 
 
