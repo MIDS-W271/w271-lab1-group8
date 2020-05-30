@@ -576,7 +576,7 @@ This represents the log odds of the fraction of orings that fail. To calculate t
 1/exp(model_b$coefficients)
 ```
 
-Here we see that a unit decrease in temperature increases the odds of failure increases by 1.12 times for each unit temperature decrease.
+Here we see that a unit decrease in temperature increases the odds of failure increases by 1.12 times.
 
 In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
 
