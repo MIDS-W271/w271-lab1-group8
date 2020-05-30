@@ -106,48 +106,99 @@ skim(df)
 lapply(df, unique)
 ```
   The values for each variable seem reasonable.
-  
+ 
+- How many observations are present for each level of O.ring failure?
+```{r, fig.width=4, fig.height=2.75}
+# Cross tabulation
+ggplot(as.data.frame(table(df)),
+       aes(x = as.factor(O.ring), y = Freq, colour=O.ring>0)) + 
+    geom_bar(stat="identity", width=0.1, alpha =0.7, color = "black", fill= "olivedrab") +
+    scale_x_discrete(name = "Number of O-ring failures")+
+    scale_y_continuous(name = "Frequency")+
+   theme_classic() +
+   theme(text = element_text(size = 20)) +
+   labs(title="Figure 1: Distribution of O-ring failures")+
+   theme(legend.position = "top") +  
+   theme(plot.title = element_text(hjust=0)) + 
+   theme(
+   axis.title.x = element_text(size = 25),
+   axis.text.x = element_text(size = 20),
+   axis.title.y = element_text(size = 25),
+   axis.text.y = element_text(size = 20),
+   plot.title = element_text(size = 25))
+``` 
+
+
 - How are O.Rings related to putative predictors, like temperature?
 ```{r, fig.width=7, fig.height=3}
-ggplot(df, aes(x=Temp, y=O.ring, colour= O.ring>0)) +
-  geom_jitter(size = 10, alpha = 0.75, height=.05, width=.3) +
-  scale_color_hue(l=5, c=15) +
+ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
+  geom_jitter(size = 10, alpha = 0.75, stroke=3, height=.05, width=.3) +
+  scale_color_manual(labels = c("ignored by NASA","used by NASA"),
+                                values = rev(c("black","olivedrab"))) +
+  scale_x_continuous(name = "Temperature (°F)")+
+  scale_y_discrete(name = "Number of O-ring\n failures") +
+  geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  geom_text(x=80, y=1.9, size=15, label="Figure 1") +
-  theme(legend.position = "none") +  
+  labs(title="Figure 2: O-ring failure as a function of temperature (°F)",
+       color="Observations:")+
+  theme(legend.position = "top") +  
+  theme(plot.title = element_text(hjust=0)) + 
   theme(
-  axis.title.x = element_text(size = 50),
-  axis.text.x = element_text(size = 35),
-  axis.title.y = element_text(size = 50),
-  axis.text.y = element_text(size = 35))
+  axis.title.x = element_text(size = 35),
+  axis.text.x = element_text(size = 30),
+  axis.title.y = element_text(size = 35),
+  axis.text.y = element_text(size = 30),
+  plot.title = element_text(size = 35)) 
+  
 ```
-
-
 
 - And pressure?
 ```{r, fig.width=7, fig.height=3}
-ggplot(df, aes(x=Pressure, y=O.ring)) +
-  geom_jitter(size=20, pch=20, alpha=3/4, position=position_jitter(w=0.2, h=0.1))+
+ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
+  geom_jitter(size=20, pch=20, alpha=3/4, stroke=3, position=position_jitter(w=0.2, h=0.1))+
+  scale_color_manual(labels = c("ignored by NASA","used by NASA"),
+                                values = rev(c("black","olivedrab"))) +
+  scale_x_continuous(name = "Pressure")+
+  scale_y_discrete(name = "Number of O-ring\n failures")+
+    geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  geom_text(x=190, y=1.9, size=15, label="Figure 2")+
+    labs(title="Figure 3: O-ring failure as a function of pressure",
+       color="Observations:")+
+  theme(legend.position = "top") +
+  theme(plot.title = element_text(hjust=0)) + 
   theme(
-  axis.title.x = element_text(size = 50),
-  axis.text.x = element_text(size = 35),
-  axis.title.y = element_text(size = 50),
-  axis.text.y = element_text(size = 35))
+  axis.title.x = element_text(size = 35),
+  axis.text.x = element_text(size = 30),
+  axis.title.y = element_text(size = 35),
+  axis.text.y = element_text(size = 30),
+  plot.title = element_text(size = 35))
 ```
 
-- How many observations are present for each level of O.ring failure?
-```{r}
-# Cross tabulation
-plot(table(df$O.ring),
-     xlab= "Number of O-ring failures",
-     ylab= "Counts",
-     lwd=10)
-text(x=1.9, y=14,labels = "Figure 3", cex=0.9)
+- Are O-ring failures related to time/flight number
+```{r, fig.width=7, fig.height=3}
+ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
+  geom_jitter(size=20, pch=20, alpha=3/4, stroke=3, position=position_jitter(w=0.2, h=0.1))+
+  scale_color_manual(labels = c("ignored by NASA","used by NASA"),
+                                values = rev(c("black","olivedrab"))) +
+  scale_x_continuous(name = "Flight number")+
+  scale_y_discrete(name = "Number of O-ring\n failures")+
+  geom_rug(alpha=2/4, size=3, position="jitter") +
+  theme_classic() +
+  theme(text = element_text(size = 20)) +
+    labs(title="Figure 4: O-ring failure as a function of flight number/time",
+       color="Observations:")+
+  theme(legend.position = "top") +
+  theme(plot.title = element_text(hjust=0)) + 
+  theme(
+  axis.title.x = element_text(size = 35),
+  axis.text.x = element_text(size = 30),
+  axis.title.y = element_text(size = 35),
+  axis.text.y = element_text(size = 30),
+  plot.title = element_text(size = 35))
 ```
+
 
 - At what temperature do 2 O.rings fail?
 ```{r}
@@ -219,8 +270,12 @@ model_a <- glm(O.ring/Number ~ Temp + Pressure,
                data = df)
 
 # Summary of coefficients, standard errors and p-values
-summary(model_a)
+stargazer(model_a,
+          type="text")
 ```
+
+$$ logit\left(\cfrac{O.ring}{Number}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$ 
+
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
 
@@ -235,9 +290,8 @@ Anova(model_a, test='LR')
 - `Pressure` is not an important explanatory variable. 
 - Above, we tested $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for `Pressure`.The $-2log(\Lambda)$ = `r Anova(model_a, test='LR')[2,1]` and the *p*-value of $P(\chi^2_1 > $`r Anova(model_a, test='LR')[2,1]`) = `r Anova(model_a, test='LR')[2,3]` > $\alpha$ 0.05. 
 - Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test & because it does not contribute much systematic variation to the model (i.e `Pressure` can only take values `r unique(df$Pressure)`). 
-- Although it was removed, it *could* be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Thus, it seems like `Pressure` could contribute to the mechanism by which `O.rings` fail.
-- **Problems that might arise from the removal of this variable include- omitted variable?**
-- Mechanistic or statistical
+- Although it was removed, it *could* be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Similarly, the Dalal *et al* 1989 report (i) very weak evidence of a pressure effect and (ii) overlapping confidence intervals for the expected number of incidents when pressure was 50 and 200. Together these bits of evidence support the hypothesis that `Pressure` could contribute to the mechanism by which `O.rings` fail.
+- Several problems could arise by the omission of `Pressure` from the model. These problems are both mechanistic and statistical. The mechanistic problem is outline in Dalal *et al* 1989. `O.ring` function and failure are highly influenced by `Pressure`. Thus, while a simple model without `Pressure` might be *sufficient* for ones purposes, a model with `Pressure` and, if more data existed, an interaction term between `Temp` and `Pressure` might help guide interpretation. The statistical problem(s) of removing `Pressure` could be numerous. For one, if `Pressure` is *correlated* with both the explanatory variable `Temp` and the outcome `O.ring`, removal of `Pressure` could introduce omitted variable bias.
 
 **Part 3 (35 points)**
 
@@ -266,7 +320,10 @@ $$logit\left(\cfrac{O.ring}{Number}\right) = 5.085 - 0.116 Temp$$
 plot(df$Temp, df$O.ring/df$Number,
      xlab='Temperature',
      ylab=expression(pi),
-     pch=20, cex=2,
+     pch=20, cex=3,
+     col=ifelse(test=df$O.ring > 0, 
+                yes="black",
+                no="olivedrab"),
      xlim=c(31,81),
      ylim=c(0,1))
 # Figure legend
@@ -284,10 +341,10 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
 plot(df$Temp, df$O.ring,
      xlab='Temperature',
      ylab="Expected number of O-ring failures",
-     pch=20, cex=2,
+     pch=20, cex=3,
      col=ifelse(test=df$O.ring > 0, 
                 yes="black",
-                no="grey45"),
+                no="olivedrab"),
      xlim=c(31,81),
      ylim=c(0,6))
 # Figure legend
@@ -357,34 +414,44 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
 
 ```{r warning=FALSE}
-# This might be helpful: https://cran.r-project.org/web/packages/bcaboot/vignettes/bcaboot.html
-# http://www-math.mit.edu/~dav/05.dir/class25-slides-all.pdf 
-
-
 # Do not change original # of failures
 df[, "O.ring2"] = df$O.ring
 
+# Dataframe to populate with results
 results <- data.frame(pred.31 = numeric(), pred.72 = numeric())
-for (s in 1:10){
-  I.sample <- sample(1:nrow(df), 23,replace=TRUE)
+
+# For each sample in 1:n
+for (s in 1:1000){
+  # Collect sample of size 23 from the whole data frame with replacement
+  I.sample <- sample(x = 1:nrow(df),
+                     size = 23,
+                     replace = TRUE)
+  # Populate d with samples
   d <- df[I.sample,]  
 
+  # Estimate model with bootstrap sample data
   mod <- glm(O.ring2/Number ~ Temp,
                family = binomial(link = logit),
                weights = Number,
                data = d)
   
+  # Z is the the beta0 + beta1X
   z = mod$coefficients["(Intercept)"] + mod$coefficients["Temp"] * d$Temp
 
+  # Pi is log of the odds
   pi = exp(z)/(1+exp(z))
-  pi.O.ring <- rbinom(23, 6, prob=pi)
+  # Generate new pi values from pi values generated with bootstrap samples
+  pi.O.ring <- rbinom(n=23,
+                      size=6,
+                      prob=pi)
   
-  #update the failures generated from model
+  # update the failures generated from model
   df[I.sample,"O.ring2"] <- pi.O.ring
+  # Estimate confidence interval for temp = 31
   temp.31.data <- data.frame(Temp=31)
   temp.31 <- predict(object = mod, newdata = temp.31.data,
                       type = "response")
-
+  # Estimate confidence interval for temp = 72
   temp.72.data <- data.frame(Temp=72)
   temp.72 <- predict(object = mod, newdata = temp.72.data,
                       type = "response")
@@ -400,100 +467,53 @@ quantile(results[,2], probs=c(0.05, 0.95))
 ```
 
 
-ˆ- Bootstrapping
+- Bootstrapping
 ```{r, warnings=F}
-# Estimate Binary logistic regression Model
-model_3b = glm(O.ringBinary ~ Temp,
-               family = binomial(link = logit),
-               data = df)
-
-# Number of bootstrap samples
-Bn = 1000                
-# E.m = empty B.n x n matrix for estimates
-E.m = matrix(nrow = Bn, ncol = length(coef(model_3b)) + 2,
-           dimnames = list(paste("Sample",1:Bn), 
-                           c(names(coef(model_3b)), "t.31", "t.72")))
-# For each bootstrap sample
-for(i in 1:Bn){
-    # sample credit data with replacement
-    bs.df = df[sample(x = 1:nrow(df),
-                          size = nrow(df),
-                          replace = TRUE), ]
-    
-    # Fit model on the boostrapped sample
-    bs.logit = glm(model_3b$formula,
-                     family = binomial(link = "logit"),
-                                          data=bs.df)
-    # Store  coefficients
-    E.m[i,] = coef(bs.logit)
-    
-    # Confidence interval code from Rajiv
-    # Temp = 31
-    temp.31.data <- data.frame(Temp=31)
-    # Store confidence interval in column 3
-    E.m[i, 3] <- predict(object = bs.logit , newdata = temp.31.data,
-                        type = "response")
-
-    # Temp = 72
-    temp.72.data <- data.frame(Temp=72)
-    # Store confidence interval in column 4
-    E.m[i, 4] <- predict(object = bs.logit , newdata = temp.72.data,
-                        type = "response")
-}
-
-paste("For 31 degrees CI =")
-quantile(E.m[,3], probs=c(0.05, 0.95))
-paste("For 72 degrees CI =")
-quantile(E.m[,4], probs=c(0.05, 0.95))
+# # Estimate Binary logistic regression Model
+# model_3b = glm(O.ringBinary ~ Temp,
+#                family = binomial(link = logit),
+#                data = df)
+# 
+# # Number of bootstrap samples
+# Bn = 1000                
+# # E.m = empty B.n x n matrix for estimates
+# E.m = matrix(nrow = Bn, ncol = length(coef(model_3b)) + 2,
+#            dimnames = list(paste("Sample",1:Bn), 
+#                            c(names(coef(model_3b)), "t.31", "t.72")))
+# # For each bootstrap sample
+# for(i in 1:Bn){
+#     # sample credit data with replacement
+#     bs.df = df[sample(x = 1:nrow(df),
+#                           size = nrow(df),
+#                           replace = TRUE), ]
+#     
+#     # Fit model on the boostrapped sample
+#     bs.logit = glm(model_3b$formula,
+#                      family = binomial(link = "logit"),
+#                                           data=bs.df)
+#     # Store  coefficients
+#     E.m[i,] = coef(bs.logit)
+#     
+#     # Confidence interval code from Rajiv
+#     # Temp = 31
+#     temp.31.data <- data.frame(Temp=31)
+#     # Store confidence interval in column 3
+#     E.m[i, 3] <- predict(object = bs.logit , newdata = temp.31.data,
+#                         type = "response")
+# 
+#     # Temp = 72
+#     temp.72.data <- data.frame(Temp=72)
+#     # Store confidence interval in column 4
+#     E.m[i, 4] <- predict(object = bs.logit , newdata = temp.72.data,
+#                         type = "response")
+# }
+# 
+# paste("For 31 degrees CI =")
+# quantile(E.m[,3], probs=c(0.05, 0.95))
+# paste("For 72 degrees CI =")
+# quantile(E.m[,4], probs=c(0.05, 0.95))
  
 ```
-
-```{r}
-# Estimate Binary logistic regression Model
-model_3b = glm(O.ringBinary ~ Temp,
-               family = binomial(link = logit),
-               data = df)
-
-
-# Number of bootstrap samples
-Bn = 10
-# E.m = empty B.n x n matrix for estimates
-E.m = matrix(nrow = Bn, ncol = length(coef(model_3b)) + 2,
-           dimnames = list(paste("Sample", 1:Bn), 
-                           c(names(coef(model_3b)), "T31", "T72")))
-
-# For each sample
-for(i in 1:Bn){
-    # sample all rows and columns of interest with replacement
-    BS.df = df[sample(x = 1:nrow(df), 
-                          size = nrow(df),
-                          replace = TRUE),
-                   c(2,6) ]
-    # Estimate the model with the boostrapped sample as data
-    BS.model = glm(model_3b$formula, 
-                     family = binomial(link = "logit"),
-                     data = BS.df)
-    # store the coefficients
-    E.m[i,] = coef(BS.model)
-    
-    # Confidence interval codel from Rajiv
-    # Temp = 31
-    temp.31.data <- data.frame(Temp=31)
-    E.m[i, 3] <- predict(object = BS.model, newdata = temp.31.data,
-                        type = "response")
-
-    # Temp = 72
-    temp.72.data <- data.frame(Temp=72)
-    E.m[i, 4] <- predict(object = BS.model, newdata = temp.72.data,
-                        type = "response")
-    
-    return (c(temp.31, temp.72))
-}
-
- 
-```
-
-
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
 
