@@ -436,7 +436,7 @@ df[, "O.ring2"] = df$O.ring
 results <- data.frame(pred.31 = numeric(), pred.72 = numeric())
 
 # For each sample in 1:n
-for (s in 1:100){
+for (s in 1:1000){
   # Collect sample of size 23 from the whole data frame with replacement
   I.sample <- sample(x = 1:nrow(df),
                      size = 23,
@@ -474,7 +474,6 @@ for (s in 1:100){
                       type = "response")
   results <- results %>% add_row(pred.31 = temp.31, pred.72 = temp.72)  
 }
-
 
 paste("For 31 degrees CI =")
 quantile(results[,1], probs=c(0.05, 0.95))
@@ -574,10 +573,10 @@ This represents the log odds of the fraction of orings that fail. To calculate t
 
 
 ```{r}
-exp(model_b$coefficients)
+1/exp(model_b$coefficients)
 ```
 
-Here we see that an increase in temperature changes the odds of failure by 0.89 times for each degree increase. In other words, a unit decrease in temperature increases the odds of failure increases by 1.11 times for each unit temperature decrease.
+Here we see that a unit decrease in temperature increases the odds of failure increases by 1.12 times for each unit temperature decrease.
 
 In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
 
