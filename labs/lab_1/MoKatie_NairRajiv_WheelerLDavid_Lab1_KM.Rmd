@@ -84,8 +84,6 @@ The dataset used in the examination of probability of O-ring failure in Challeng
 Because the O.ring column contains more than 2 outcomes, we also created a new factor variable to binarize the dependent variable. This new column, O.ringBinary, would have an outcome of 1 if the number of primary O-ring failures in a launch was 1 or greater.
  
 ```{r}
-#If we don't use a binary model, then we should just delete this
-
 # Create binary column for O.ring failture
 df$O.ringBinary = ifelse(test = df$O.ring > 0, yes = 1, no = 0)
 # Convert O.ringBinary to factor
@@ -96,10 +94,6 @@ str(df)
 
 ```{r}
 # Summary statistics
-#skim(df) this is not knitting
-```
-
-```{r}
 summary(df)
 ```
 
@@ -168,7 +162,7 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
                                 values = rev(c("black","olivedrab"))) +
   scale_x_continuous(name = "Temperature (°F)")+
   scale_y_discrete(name = "Number of O-ring failures") +
-  #geom_rug(alpha=2/4, size=3, position="jitter") +
+  geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
   labs(title=expression(~bold('Figure 2:')~'O-ring failure as a function of temperature (°F)'),
@@ -184,22 +178,6 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   
 ```
 
-- At what temperature do 2 O.rings fail?
-
-```{r, results='hide'}
-# Cross tabulation
-table(df$O.ring, df$Temp)
-## At what temperatures are there 0,1 and 2 failures
-# 0 
-sort(df$Temp[df$O.ring == 0])
-# 1
-sort(df$Temp[df$O.ring == 1])
-# 2
-sort(df$Temp[df$O.ring == 2])
-
-#not sure we need this as it takes up half a page? this code block is hidden
-```
-
 - And pressure?
 
 ```{r, fig.width=6, fig.height=3, echo=F}
@@ -209,7 +187,7 @@ ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
                                 values = rev(c("black","olivedrab"))) +
   scale_x_continuous(name = "Pressure")+
   scale_y_discrete(name = "Number of O-ring failures")+
-    #geom_rug(alpha=2/4, size=3, position="jitter") +
+  geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
   labs(title=expression(~bold('Figure 3:')~' O-ring failure as a function of pressure'),
@@ -284,11 +262,12 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 
 (a) The authors use logistic regression to estimate the probability an O-ring will fail. In order to use this model, the authors needed to assume that each O-ring is independent for each launch. Discuss why this assumption is necessary and the potential problems with it. Note that a subsequent analysis helped to alleviate the authors’ concerns about independence.
 
-- The authors state that the binomial but not the binary model suffer from the assumption that each O-ring failure is independent. More specifically, the binomial model assumes that each of the six 0-rings fail independently at each temperature, $t$, and pressure, $s$. 
+- The authors state that the binomial but not the binary model suffer from the assumption that each O-ring failure is independent. More specifically, the binomial model assumes that each of the six 0-rings fail independently at each temperature, $t$, and pressure, $s$. This assumption is likely to be violated since the failure of 1 or more of the O-rings influences the failure of the remaining O-rings. Moreover, the binary logistic regression model does not suffer from this assumption since each *trial* is a flight and we assume the flights are independent. 
 
-- The independence assumption is necessary for the binomial model becuase it allows us to use the binomial probability mass function.
+- The independence assumption is necessary for the binomial model becuase it allows us to use the binomial probability mass function. Moreover, the assumption is likely violated since the failure of 1 0-ring might expose other 0-rings to damaging conditions and or might exert stress on the remaining 0-rings.
 
-- Moreover, the assumption is likely violated since the failure of 1 0-ring might expose other 0-rings to damaging conditions and or might exert stress on the remaining 0-rings.
+- Conversely, the binary model does suffer from this assumption since flights are equivalent to trials and we assume that each flight is indepedent.
+
 
 
 (b) Estimate the logistic regression model using the explanatory variables in a linear form.
@@ -353,14 +332,12 @@ $$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
 plot(df$Temp, df$O.ring/df$Number,
      xlab='Temperature (°F)',
      ylab=expression(pi),
-     pch=20, cex=1.5, 
-     col=ifelse(test=df$O.ring > 0, 
-                yes="black",
-                no="olivedrab"),
+     pch=20, cex=3,
+     col="black",
      xlim=c(31,81),
      ylim=c(0,1))
-# Figure legend
-text(x=75, y=0.9,labels = "Figure 4", cex=0.9)
+# Title
+title(expression(bold("Figure 6:")~pi~"as a function of temperature (°F)"), adj=0)
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
@@ -375,14 +352,13 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
 plot(df$Temp, df$O.ring,
      xlab='Temperature (°F)',
      ylab="Expected number of O-ring failures",
-     pch=20, cex=1.5,
-     col=ifelse(test=df$O.ring > 0, 
-                yes="black",
-                no="olivedrab"),
+     pch=20, cex=3,
+     col="black",
      xlim=c(31,81),
      ylim=c(0,6))
-# Figure legend
-text(x=75, y=5.5,labels = "Figure 5", cex=0.9)
+# Title
+title(expression(bold("Figure 7:")~"Expected number of failures as a function of temperature (°F)"), adj=0)
+## Binomial betas
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
@@ -408,11 +384,11 @@ CI_higher_pi <- exp(CI_higher_linear)/(1+exp(CI_higher_linear))
 plot(df$Temp, df$O.ring/df$Number,
      xlab='Temperature (°F)',
      ylab=expression(pi),
-     pch=20, cex=1.5,
+     pch=20, cex=3,
      xlim=c(31,81),
      ylim=c(0,1))
-# Figure legend
-text(x=75, y=0.9,labels = "Figure 6", cex=0.9)
+# Title
+title(expression(bold("Figure 8:")~pi~"as a function of temperature (°F)"), adj=0)
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
@@ -441,30 +417,7 @@ predict.pi <- predict(object = model_b,
                       type = "response")
 
 # Confidence interval for 31deg was computed above in part (c)
-data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
-```
-
-```{r}
-#THIS CAN BE DELETED
-# Data to extrapolate
-predict.data <- data.frame(Temp = 72)
-
-# Predict surface/link
-predict.linear <- predict(object = model_b,
-                          newdata = predict.data,
-                          type = "link",
-                          se=T)
-
-# Predict response 
-predict.pi <- predict(object = model_b, 
-                      newdata = predict.data,
-                      type = "response")
-predict.pi
-#pi_hat <- exp(predict.linear$fit)/(1+exp(predict.linear$fit))
-alpha=0.1
-CI_linear <- predict.linear$fit + qnorm(p=c(alpha/2, 1-alpha/2))*predict.linear$se.fit
-exp(CI_linear)/(1+exp(CI_linear))
-
+data.frame(temperature=31,estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 ```
 
 - Thus, the probability of O-ring failure at 31° is `r predict.pi` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
@@ -545,15 +498,20 @@ quantile(results[,2], probs=c(0.05, 0.95))
 par(mfrow=c(2,1))
 # Histogram for temp = 31
 hist(results[,1],
-     breaks=50,
-     col="lightskyblue1",
-     main="Bootstrapped confidence intervals for temperature (°F)= 31")
-
+     breaks=100,
+     col="lightskyblue3",
+     xlab=NULL,
+     xlim=c(0,1),ylim=c(0,2000),
+     main="31 (°F)", adj=1)
+# Title
+title(expression(bold("Figure 9:")~"Probability of failure when temperature:"), adj=0)
 # Histogram for temp = 72
 hist(results[,2],
-     breaks=50,
-     col="orange",
-     main="Bootstrapped confidence intervals for temperature (°F)= 72")
+     breaks=20,
+     col="orangered",
+     xlab=NULL,
+     xlim=c(0,1),ylim=c(0,2000),
+     main="72 (°F)", adj=1)
 ```
 
 ```{r warning=FALSE}
@@ -662,14 +620,26 @@ $$ \cfrac{O.ring}{Number} = 0.616 - 0.008Temp$$
 
 - Model diagnostics:
 ```{r, fig.width=5, fig.height=3.5}
-# diagnotics
-plot(model_4, which=1, pch=20, cex=2)
-# Figure legend
-text(x=0.18, y=0.3,labels = "Figure 7", cex=0.9)
-# diagnotics
-plot(model_4, which=2, pch=20, cex=2)
-# Figure legend
-text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
+# Plot histograms of confidence intervals
+par(mfrow=c(2,1))
+
+# Residuals vs fitted values
+plot(model_4$fitted.values, model_4$residuals,
+     pch=20, cex=2, main=NULL,
+     xlab="Fitted values",
+     ylab="Residuals")
+# Title
+title(expression(bold("Figure 10:")~"Residual vs. fitted values &"), adj=0)
+# Quantile-quantile plot
+qqnorm(df$O.ring,
+     pch=20, cex=2, main=NULL,
+     xlab="Sample quantiles",
+     ylab="Theoretical quantiles")
+# Add line
+qqline(df$O.ring,
+       col="red", lwd=2)
+# Title
+title(expression("Normal q-q plot"), adj=0)
 ```
 
 - Assess the validity of the model assumptions: 
