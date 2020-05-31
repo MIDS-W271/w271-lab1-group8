@@ -79,7 +79,7 @@ Conduct a thorough EDA of the data set. This should include both graphical and t
 
 # EDA
 
-The dataset used in the examination of probability of O-ring failure in Challenger's previous space shuttle launches by Dalel et al. (1989) included 23 rows and 5 variables. The `Flight` column is made up of unique identifiers representing the flight number of a launch. The `Temp` column contains information about the temperature (°F) at launch, and ranges between 53 and 81 °F for the 23 data points. Notably, the temperature on the day of the space shuttle Challenger accident, 31 °F, was much lower than lowest previously recorded launch temperature provided in this dataset. The `Pressure` column contains information about the combustion pressure (psi) at launch, and takes on only 3 values among the 23 data points: 50 100, or 200. The `O.ring` column represents the number of primary field O-ring failures in a launch, which is our outcome of interest. For this dataset, the `O.ring` column contains only the values 0, 1, or 2. The `Number` column contains the total number of primary field O-rings, which is 6 for all launches (three each for the two booster rockets). Each of the 5 variables were treated as `int` classes. 
+The dataset used in the examination of probability of O-ring failure in Challenger's previous space shuttle launches by Dalel et al. (1989) included 23 rows and 5 variables. The `Flight` column is made up of unique identifiers representing the flight number of a launch. The `Temp` column contains information about the temperature (°F) at launch, and ranges between 53 and 81 °F for the 23 data points. Notably, the temperature on the day of the space shuttle Challenger accident, 31 °F, was much lower than lowest previously recorded launch temperature provided in this dataset. The `Pressure` column contains information about the combustion pressure (psi) at launch, and takes on only 3 values among the 23 data points: 50 100, or 200. The `O.ring` column represents the number of primary field O-ring failures in a launch, which is our outcome of interest. For this dataset, the `O.ring` column contains only the values 0, 1, or 2. The `Number` column contains the total number of primary field O-rings, which is 6 for all launches (three each for the two booster rockets). 
 
 ```{r}
 str(df)
@@ -94,7 +94,7 @@ summary(df)
 lapply(df[c('Temp','Pressure','O.ring')], unique)
 ```
 
-To ensure that the data do not contain anomolous observations, we next inspected the unique values for each variables. The values for each variable seem reasonable according to their description and we do not observe any top coded or bottom coded values. We also noted that there are no missing values in any of the variables.
+Each of the 5 variables were treated as `int` classes. To ensure that the data do not contain anomolous observations, we inspected the unique values for each variables. The values for each variable seem reasonable according to their description and we do not observe any top coded or bottom coded values. We also noted that there are no missing values in any of the variables.
 
 **Univariate Analysis**
 
@@ -170,7 +170,7 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   
 ```
 
-When plotting the temperature against the number of O-ring failures, the launches with no O-ring failures tend to occur on the right hand side of the graph, where temperature is higher. This is consistent with the negative correlation of 'r round(cor(df$Temp, df$O.ring),3)'. The lowest temperature at which there were no recorded O-ring failures was observed to be 66 °F. Above this temperature, we have one launch with 1 O-ring failure and one launch with 2 O-ring failures. The launches below 66 °F all had at least 1 O-ring failure. The authors of the paper mentioned that launches with no O-ring failures were not included in the original thermal distress analysis prior to the Challenger accident, which are highlighted in green in the plot above. 
+When plotting the temperature against the number of O-ring failures, the launches with no O-ring failures tend to occur on the right hand side of the graph, where temperature is higher. This is consistent with the negative correlation of `r round(cor(df$Temp, df$O.ring),3)`. The lowest temperature at which there were no recorded O-ring failures was observed to be 66 °F. Above this temperature, we have one launch with 1 O-ring failure and one launch with 2 O-ring failures. The launches below 66 °F all had at least 1 O-ring failure. The authors of the paper mentioned that launches with no O-ring failures were not included in the original thermal distress analysis prior to the Challenger accident, which are highlighted in green in the plot above. 
 
 ```{r, fig.width=6, fig.height=3, echo=F}
 ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
@@ -195,9 +195,9 @@ ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
 ```
 
 
-There were the most number of recorded launches at 200 psi, and at this pressure, there was the most number of launches with at least 1 O-ring failure. At 200 psi, 4 out of the 15 launches (27%) had at least 1 O-ring failure. At 50 psi, 1 out of the 6 launches (17%) had at least 1 O-ring failure. There were no O-ring failures for launches at 100 psi, though there were only 2 recorded data points. The correlation between the two variables is slightly positive, at 'r round(cor(df$O.ring, df$Pressure),3)'.
+There were the most number of recorded launches at 200 psi, and at this pressure, there was the most number of launches with at least 1 O-ring failure. At 200 psi, 4 out of the 15 launches (27%) had at least 1 O-ring failure. At 50 psi, 1 out of the 6 launches (17%) had at least 1 O-ring failure. There were no O-ring failures for launches at 100 psi, though there were only 2 recorded data points. The correlation between the two variables is slightly positive, at `r round(cor(df$O.ring, df$Pressure),3)`.
 
-Based on the description in the paper, we do not anticipate there to be any meaningful relationship between temperature and pressure as they are both arbitrarily determined. Pressure is a condition set by the test procedure, which was first at 50 psi, then progressively updated to 100 psi and 200 psi. Temperature is merely a condition at the time of launch. The correlation between the two variables, 'r round(cor(df$Temp, df$Pressure),3)' supports our understanding.
+Based on the description in the paper, we do not anticipate there to be any meaningful relationship between temperature and pressure as they are both arbitrarily determined. Pressure is a condition set by the test procedure, which was first at 50 psi, then progressively updated to 100 psi and 200 psi. Temperature is merely a condition at the time of launch. The low correlation between the two variables, `r round(cor(df$Temp, df$Pressure),3)`, supports our understanding.
 
 
 ```{r, fig.width=7, fig.height=4, echo=F, results='hide'} 
