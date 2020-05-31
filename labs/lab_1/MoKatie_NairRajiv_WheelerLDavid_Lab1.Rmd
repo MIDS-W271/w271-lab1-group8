@@ -16,7 +16,7 @@ geometry: margin=1in
 
 * Do not modify fontsize, margin or line_spacing settings
 
-* One student from each group should submit the lab to their student github repo by the deadline; submission and revisions made after the deadline will not be graded
+* One student from each group should submit the lab to their student github repo by the deadline; submission and revisions made after the deadline will not be graded.
 
 * Answers should clearly explain your reasoning; do not simply 'output dump' the results of code without explanation 
 
@@ -64,7 +64,7 @@ library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
 library(boot) # framework for bootstrapping
-
+library(plotly) # For 3d scatterplot
 ```
 
 # Load data
@@ -114,10 +114,10 @@ ggplot(as.data.frame(table(df)),
        aes(x = as.factor(O.ring), y = Freq, colour=O.ring>0)) + 
     geom_bar(stat="identity", width=0.1, alpha =0.7, color = "black", fill= "olivedrab") +
     scale_x_discrete(name = "Number of O-ring failures")+
-    scale_y_continuous(name = "Frequency")+
+    scale_y_continuous(name = "Counts")+
    theme_classic() +
    theme(text = element_text(size = 20)) +
-   labs(title="Figure 1: Distribution of O-ring failures")+
+   labs(title=expression(~bold('Figure 1:')~'Distribution of O-ring failures'))+
    theme(legend.position = "top") +  
    theme(plot.title = element_text(hjust=0)) + 
    theme(
@@ -140,7 +140,7 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  labs(title="Figure 2: O-ring failure as a function of temperature (°F)",
+  labs(title=expression(~bold('Figure 2:')~'O-ring failure as a function of temperature (°F)'),
        color="Observations:")+
   theme(legend.position = "top") +  
   theme(plot.title = element_text(hjust=0)) + 
@@ -164,8 +164,8 @@ ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
     geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-    labs(title="Figure 3: O-ring failure as a function of pressure",
-       color="Observations:")+
+  labs(title=expression(~bold('Figure 3:')~' O-ring failure as a function of pressure'),
+     color="Observations:")+
   theme(legend.position = "top") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
@@ -187,8 +187,8 @@ ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 20)) +
-    labs(title="Figure 4: O-ring failure as a function of flight number/time",
-       color="Observations:")+
+  labs(title=expression(~bold('Figure 4:')~' O-ring failure as a function of flight number/time'),
+   color="Observations:")+
   theme(legend.position = "top") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
@@ -197,6 +197,29 @@ ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
   axis.title.y = element_text(size = 35),
   axis.text.y = element_text(size = 30),
   plot.title = element_text(size = 35))
+```
+
+- How do both `Temp` and `Pressure` affect `O.ring` failure?
+```{r}
+# Specify levels of O.ring failure
+df$O.ring[which(df$O.ring == 0)] <- 0
+df$O.ring[which(df$O.ring == 1)] <- 1
+df$O.ring[which(df$O.ring == 2)] <- 2
+# Define 3 level factor of O.ring failures
+df$O.ringFactor <- as.factor(df$O.ring)
+# Sanity check
+levels(df$O.ringFactor)
+
+# Build 3d scatter plot
+fig <- plot_ly(df, x = ~ Temp, y = ~ Pressure, z = ~ O.ringFactor,
+               color = ~ O.ringFactor,
+               colors = c('olivedrab', 'orange2',"orangered2"))
+fig <- fig %>% add_markers()
+fig <- fig %>% layout(scene = list(xaxis = list(title = 'Temperature (°F)'),
+                     yaxis = list(title = 'Pressure'),
+                     zaxis = list(title = 'Number of O-ring failures')))
+
+fig
 ```
 
 
@@ -238,7 +261,6 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 
 ```{r}
 #create a dataset that assumes that each of the 6 primary field O-rings on a flight is an independent data point
-
 df_ind <- data.frame()
 
 for(i in array(1:nrow(df))){
@@ -253,16 +275,7 @@ for(i in array(1:nrow(df))){
 ```
 
 - Logistic regression
-```{r}
-# # Estimate logistic regression model
-# model_a <- glm(Failure ~ Temp + Pressure,
-#                family = binomial(link = logit),
-#                data = df_ind)
-# # Summary of coefficients, standard errors and p-values
-# summary(model_a)
-# 
-# # vs
-## Binomial model with weights
+```{r, warning=F}
 # Estimate logistic regression model
 model_a <- glm(O.ring/Number ~ Temp + Pressure,
                family = binomial(link = logit),
@@ -274,7 +287,7 @@ stargazer(model_a,
           type="text")
 ```
 
-$$ logit\left(\cfrac{O.ring}{Number}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$ 
+$$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$ 
 
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
@@ -311,14 +324,14 @@ model_b <- glm(O.ring/Number ~ Temp,
 stargazer(model_b, type="text")
 ```
 
-$$logit\left(\cfrac{O.ring}{Number}\right) = 5.085 - 0.116 Temp$$
+$$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
 
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
 - (1) $\pi$ vs. Temp:
 ```{r}
 plot(df$Temp, df$O.ring/df$Number,
-     xlab='Temperature',
+     xlab='Temperature (°F)',
      ylab=expression(pi),
      pch=20, cex=3,
      col=ifelse(test=df$O.ring > 0, 
@@ -339,7 +352,7 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
 - (2) Expected number of failures vs. Temp.
 ```{r}
 plot(df$Temp, df$O.ring,
-     xlab='Temperature',
+     xlab='Temperature (°F)',
      ylab="Expected number of O-ring failures",
      pch=20, cex=3,
      col=ifelse(test=df$O.ring > 0, 
@@ -371,7 +384,7 @@ CI_higher_pi <- exp(CI_higher_linear)/(1+exp(CI_higher_linear))
 
 ```{r}
 plot(df$Temp, df$O.ring/df$Number,
-     xlab='Temperature',
+     xlab='Temperature (°F)',
      ylab=expression(pi),
      pch=20, cex=2,
      xlim=c(31,81),
@@ -393,7 +406,7 @@ lines(t, CI_higher_pi, lty = 'dashed')
 - The probability of O-ring failure when temperature is 31°:
 ```{r}
 # Data to exptrapolate
-predict.data <- data.frame(Temp = 20)
+predict.data <- data.frame(Temp = 31)
 # Predict surface/link
 predict(object = model_b,
         newdata = predict.data,
@@ -408,8 +421,8 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 
 - Thus, the probability of O-ring failure is `r predict(object = model_b, newdata = predict.data, type = "response")` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
 - The assumptions needed to apply the inference procedures are:
-  - We are assuming a linear relationship between the log odds of failure of an o-ring and Temperature.
-  - We are assuming that the observations are independent. i.e. The failure of one o-ring does not increase the odds of the other to fail
+  - We are assuming a linear relationship between the log odds of failure of an O-ring and Temperature.
+  - We are assuming that the observations are independent. i.e. The failure of one O-ring does not increase the odds of the other to fail
   
 
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
@@ -426,7 +439,6 @@ Do the following steps in a loop (1..100):
 * run predictions for 31 and 72 degrees and save results
 
 At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
-
 
 ```{r warning=FALSE}
 # Do not change original # of failures
@@ -449,14 +461,14 @@ for (s in 1:1000){
                family = binomial(link = logit),
                weights = Number,
                data = d)
-
+  
   if (s==1){
     # Z is the the beta0 + beta1X
     z = mod$coefficients["(Intercept)"] + mod$coefficients["Temp"] * d$Temp
   
     # Pi is the binary Logistic Regression
     pi = exp(z)/(1+exp(z))
-  }  
+  } 
   # Generate new pi values from pi values generated with bootstrap samples
   pi.O.ring <- rbinom(n=23, # sample size
                       size=6, # number of trials
@@ -480,6 +492,19 @@ quantile(results[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
 quantile(results[,2], probs=c(0.05, 0.95))
 
+# Plot histograms of confidence intervals
+par(mfrow=c(2,1))
+# Histogram for temp = 31
+hist(results[,1],
+     breaks=50,
+     col="lightskyblue1",
+     main="Bootstrapped confidence intervals for temperature (°F)= 31")
+
+# Histogram for temp = 72
+hist(results[,2],
+     breaks=50,
+     col="orange",
+     main="Bootstrapped confidence intervals for temperature (°F)= 72")
 ```
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
@@ -496,7 +521,7 @@ stargazer(model_3f, type="text")
 
 ```
 
-$$ logit\left(\cfrac{O.ring}{Number}\right)=22.126 -0.651Temp + 0.004Temp^2 $$ 
+$$ logit\left(\hat{\pi}\right)=22.126 -0.651Temp + 0.004Temp^2 $$ 
 
 - Conduct LRT:
 ```{r}
@@ -562,6 +587,8 @@ text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
   - the response, O-ring failure is either binary (e.g. 0 or 1), binomial (e.g. a proportion from 0 to 1), or counts (e.g. 0,1,2,3,...,n) which can ultimately be expressed as a binary or binomial variable.
   -
 
+- Explain why:
+
 **Part 5 (10 points)**
 
 Interpret the main result of your final model in terms of both odds and probability of failure. Summarize the final result with respect to the question(s) being asked and key takeaways from the analysis.
@@ -569,16 +596,17 @@ Interpret the main result of your final model in terms of both odds and probabil
 Our final model model is $$logit\left(\hat\pi\right) = 5.085 - 0.116 Temp$$
 
 
-This represents the log odds of the fraction of orings that fail. To calculate the odds, we exponentiate the coefficients as below. 
+This represents the log odds of the fraction of O-rings that fail. To calculate the odds, we exponentiate the coefficients as below. 
 
 
 ```{r}
+exp(model_b$coefficients)
+
 1/exp(model_b$coefficients)
 ```
+
 
 Here we see that a unit decrease in temperature increases the odds of failure increases by 1.12 times.
 
 In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
-
-
 
