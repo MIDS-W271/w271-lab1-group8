@@ -64,7 +64,7 @@ library(skimr) # for basic EDA
 #library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
-library(boot) # framework for bootstrapping
+#library(boot) # framework for bootstrapping
 library(scatterplot3d) # For 3d scatterplot
 ```
 
