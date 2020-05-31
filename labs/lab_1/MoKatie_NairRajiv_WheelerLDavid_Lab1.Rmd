@@ -256,39 +256,54 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 
 - Moreover, the assumption is likely violated since the failure of 1 0-ring might expose other 0-rings to damaging conditions and or might exert stress on the remaining 0-rings.
 
+- The authors subsequently used a binary logistic regression model by introducing a binary flag for failure. One or more failures were simply marked as a failure, thereby removing the independence assumption.
+
 
 (b) Estimate the logistic regression model using the explanatory variables in a linear form.
 
-```{r}
-#create a dataset that assumes that each of the 6 primary field O-rings on a flight is an independent data point
-df_ind <- data.frame()
 
-for(i in array(1:nrow(df))){
-  n = df['O.ring'][i,]
-  one_flight <- data.frame(Flight=array(df['Flight'][i,], 6),
-                           Temp=array(df['Temp'][i,], 6),
-                           Pressure=array(df['Pressure'][i,], 6),
-                           Failure=c(array(1, n),array(0, 6-n))
-                           )
-  df_ind <- rbind(df_ind, one_flight)
-}
-```
-
-- Logistic regression
 ```{r, warning=F}
-# Estimate logistic regression model
+df["Fail"] <- ifelse(df$O.ring>=1, 1, 0)
+# Estimate binomial logistic regression model
 model_a <- glm(O.ring/Number ~ Temp + Pressure,
                family = binomial(link = logit),
                weights = Number,
                data = df)
 
+# Estimate binary logistic regression model
+model_a.1 <- glm(Fail ~ Temp + Pressure,
+               family = binomial(link = logit),
+               data = df)
+
+
 # Summary of coefficients, standard errors and p-values
-stargazer(model_a,
+stargazer(model_a, model_a.1,
           type="text")
+
+1/exp(summary(model_a.1)$coefficients)
 ```
 
-$$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$ 
+Here we estimate the bimonial and binary regression models separately. For the binary model, we introduce a new flag "Fail" that is set to 1 if at least one failure, 0 otherwise. This effectively eliminates the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level. By exponentiating the coefficients and taking inverse, we can interpret the 
 
+** Binomial Model **
+
+$$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$
+
+
+```{r}
+1/exp(summary(model_a)$coefficients)
+```
+
+For the Logistic regression binomial model with Temperature and Pressure included, we see that a unit increase in temperature changes the odds of failure by 1.1 times
+
+
+** Binary Model** 
+$$ logit\left(\hat{\pi}\right)= 13.292 - 0.229\text{Temp} + 0.010\text{Pressure} $$ 
+
+```{r}
+1/exp(summary(model_a.1)$coefficients)
+```
+For the Logistic regression binary model with Temperature and Pressure included, we see that a unit increase in temperature changes the odds of failure by 1.25 times.
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
 
@@ -321,7 +336,7 @@ model_b <- glm(O.ring/Number ~ Temp,
                weights = Number,
                data = df)
 # Summary of coefficients, standard errors and p-values
-stargazer(model_b, type="text")
+stargazer(model_b,  type="text")
 ```
 
 $$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
@@ -609,11 +624,10 @@ text(x=1.5, y=3.2,labels = "Figure 8", cex=0.9)
   - **Lastly, this model formulation possesses another shortcomings**:
     - The probabilities are linearly related to the predictors for all of their possible values.
 
-- We select the binary logistic regression model because:
-  - the response, O-ring failure is either binary (e.g. 0 or 1), binomial (e.g. a proportion from 0 to 1), or counts (e.g. 0,1,2,3,...,n) which can ultimately be expressed as a binary or binomial variable.
-  -
-
 - Explain why:
+- We select the binary logistic regression model because:
+  - The problem is clearly asking a success/failure question. The response, O-ring failure is either binary (e.g. 0 or 1), binomial (e.g. a proportion from 0 to 1), or counts (e.g. 0,1,2,3,...,n) which can ultimately be expressed as a binary or binomial variable.
+  - The MLR assumptions as seen above does not hold and therefore the linear regression model is not suitable for this problem.
 
 **Part 5 (10 points)**
 
@@ -635,3 +649,4 @@ Here we see that a unit decrease in temperature increases the odds of failure in
 
 In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
 
+In summary, we explored the relationship to pressure vs failure and temperature vs failure. We note a higher incidence of failures at lower temperatures, wheras no strong evidence of a relationship to pressure was identified. We 
