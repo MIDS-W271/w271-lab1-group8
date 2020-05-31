@@ -473,26 +473,16 @@ data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27. At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
 
 
-For parametric bootstrap, we do the following steps.
-
-1. Create new column o.ring2 and initialize to o.ring. This column will be updated in each iteration.
-
-2. Calculate Z the linear outcome using $Z = \beta_0+\beta_{Temp}*Temp$ (vector of size 23)
-
-3. Calculate $\hat\pi = \cfrac{e^Z}{ 1+e^Z}$ (vector of size 23)
-
-4. Do the following steps in a loop (1..1000):
-
-* sample 23 points $d$ from original dataset with replacement
-
-* subset $\pi$ values corresponding to the random subset generated above
-
-* Generate vector of size 23 of binomials 0-6 $O.ring2$ that represent the outcomes, using the built in rbinom function by passing in the pi's generated in prior step.
-
-* Fit the binomial logistic regression model with new datapoints $d$ and outcomes $O.ring2$ 
-
-* run predictions for 31 and 72 degrees and save results
-
+For parametric bootstrap, we do the following steps.  
+1. Create new column o.ring2 and initialize to o.ring. This column will be updated in each iteration.  
+2. Calculate Z the linear outcome using $Z = \beta_0+\beta_{Temp}*Temp$ (vector of size 23)  
+3. Calculate $\hat\pi = \cfrac{e^Z}{ 1+e^Z}$ (vector of size 23)  
+4. Do the following steps in a loop (1..1000):  
+  - sample 23 points $d$ from original dataset with replacement  
+  - subset $\pi$ values corresponding to the random subset generated above  
+  - Generate vector of size 23 of binomials 0-6 $O.ring2$ that represent the outcomes, using the built in rbinom function by passing in the pi's generated in prior step.  
+  - Fit the binomial logistic regression model with new datapoints $d$ and outcomes $O.ring2$  
+  - run predictions for 31 and 72 degrees and save results  
 5. select the 5% and 95% quantiles from the predictions accumulated in the loop above and report
 
 
@@ -610,7 +600,7 @@ $$ \cfrac{O.ring}{Number} = 0.616 - 0.008Temp$$
 
 
 - Model diagnostics:
-```{r, fig.width=5, fig.height=3.5}
+```{r}
 # Plot histograms of confidence intervals
 par(mfrow=c(2,1))
 
