@@ -1,13 +1,14 @@
 ---
 title: "W271 Group Lab 1"
-subtitle: 'Due 4:00pm Pacific Time Monday June 1 2020'
-students: 'Katie Mo, Rajiv Nair, David Linnard Wheeler'
-output: 
-  pdf_document:
-  toc: true
-  number_sections: true
-fontsize: 11pt
 geometry: margin=1in
+output:
+  pdf_document: null
+  word_document: default
+  toc: yes
+  number_sections: yes
+students: Katie Mo, Rajiv Nair, David Linnard Wheeler
+subtitle: Due 4:00pm Pacific Time Monday June 1 2020
+fontsize: 11pt
 ---
 
 ## Instructions (Please Read Carefully):
@@ -64,7 +65,7 @@ library(skimr) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
 library(boot) # framework for bootstrapping
-#library(plotly) # For 3d scatterplot
+library(scatterplot3d) # For 3d scatterplot
 ```
 
 # Load data
@@ -111,21 +112,36 @@ To ensure that the data do not contain anomolous observations, we next inspected
 The three variables of interest for modeling purposes in the paper by Dalel et al. were temperature, pressure, and number of O-ring failures. 
 
 ```{r, fig.width=4, fig.height=2.5, echo=F}
-ggplot(df, aes(x = Temp)) +
+one = ggplot(df, aes(x = Temp)) +
   geom_histogram(binwidth = 1, fill="olivedrab", colour="black", alpha=0.7) + 
-  ggtitle("Distribution of Temperature") +
+  ggtitle("distribution of Temperature, &") +
+    scale_x_continuous(name = "Temperature (°F)")+ 
   theme(plot.title = element_text(lineheight=1)) +
-  theme_classic()
+  theme_classic()+
+   theme(
+   axis.title.x = element_text(size = 12),
+   axis.text.x = element_text(size = 12),
+   axis.title.y = element_text(size = 12),
+   axis.text.y = element_text(size = 12),
+   plot.title = element_text(size = 12))
 ```
 
 From the histogram, the temperature is seen to peak at 70 degrees with 4 observations and tapered off on either side. Based on the plot, the distribution seems to most closely resemble a normal distribution.
 
 ```{r, fig.width=4, fig.height=2.5, echo=F}
-ggplot(df, aes(x = Pressure)) +
+two = ggplot(df, aes(x = Pressure)) +
   geom_histogram(binwidth = 5, fill="olivedrab", colour="black", alpha=0.7) + 
-  ggtitle("Distribution of Pressure") +
+  ggtitle("distribution of Pressure") +
+  scale_x_continuous(name = "Pressure")+
+  scale_y_continuous(name = " ")+ 
   theme(plot.title = element_text(lineheight=1)) +
-  theme_classic()
+  theme_classic() +
+   theme(
+   axis.title.x = element_text(size = 12),
+   axis.text.x = element_text(size = 12),
+   axis.title.y = element_text(size = 12),
+   axis.text.y = element_text(size = 12),
+   plot.title = element_text(size = 12))
 ```
 
 Pressure is seen to only take on 3 unique values, with the most observations having a pressure of 200. Though it is difficult to say with such few unique values, the distribution seems to most closely resemble a bimodal distribution.
@@ -133,14 +149,14 @@ Pressure is seen to only take on 3 unique values, with the most observations hav
 ```{r, fig.width=4, fig.height=2.5, echo=F}
 # How many observations are present for each level of O.ring failure?
 # Cross tabulation
-ggplot(as.data.frame(table(df)),
+three = ggplot(as.data.frame(table(df)),
        aes(x = as.factor(O.ring), y = Freq, colour=O.ring>0)) + 
     geom_bar(stat="identity", width=0.1, alpha =0.7, color = "black", fill= "olivedrab") +
     scale_x_discrete(name = "Number of O-ring failures")+
     scale_y_continuous(name = "Counts")+
    theme_classic() +
    theme(text = element_text(size = 12)) +
-   labs(title=expression(~bold('Figure 1:')~'Distribution of O-ring failures'))+
+   labs(title=expression(~bold('Figure 1:')~'Distribution of O-ring failures, '))+
    theme(legend.position = "top") +  
    theme(plot.title = element_text(hjust=0)) + 
    theme(
@@ -151,6 +167,11 @@ ggplot(as.data.frame(table(df)),
    plot.title = element_text(size = 12))
 ``` 
 
+```{r, fig.width=8, fig.height=2.5}
+grid.arrange(three, one, two,
+             nrow=1)
+```
+
 The response variable `O.ring` is positively skewed with the majority of O-ring failures at 0. We observe that there are no O-ring failures in 16 flights, one O-ring failure in 5 flights, and two O-ring failures in 2 flights. 
 
 **Bivariate Analysis**
@@ -158,7 +179,7 @@ The response variable `O.ring` is positively skewed with the majority of O-ring 
 - How are O.Rings related to putative predictors, like temperature?
 
 ```{r, fig.width=6, fig.height=3, echo=F}
-ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
+four = ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_jitter(size = 3, alpha = 0.75, stroke=3, height=.05, width=.3) +
   scale_color_manual(labels = c("ignored by NASA","used by NASA"),
                                 values = rev(c("black","olivedrab"))) +
@@ -167,7 +188,7 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(title=expression(~bold('Figure 2:')~'O-ring failure as a function of temperature (°F)'),
+  labs(title=expression(~bold('Figure 2:')~'O-ring failure as a function of:     temperature (°F)'),
        color="Observations:")+
   theme(legend.position = "top") +  
   theme(plot.title = element_text(hjust=0)) + 
@@ -177,24 +198,22 @@ ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   axis.title.y = element_text(size = 12),
   axis.text.y = element_text(size = 12),
   plot.title = element_text(size = 12)) 
-  
 ```
 
 - And pressure?
 
 ```{r, fig.width=6, fig.height=3, echo=F}
-ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
+five = ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_jitter(size=4, pch=20, alpha=3/4, stroke=3, position=position_jitter(w=0.2, h=0.1))+
   scale_color_manual(labels = c("ignored by NASA","used by NASA"),
                                 values = rev(c("black","olivedrab"))) +
   scale_x_continuous(name = "Pressure")+
-  scale_y_discrete(name = "Number of O-ring failures")+
+  #scale_y_discrete(name = "Number of O-ring failures")+
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(title=expression(~bold('Figure 3:')~' O-ring failure as a function of pressure'),
-     color="Observations:")+
-  theme(legend.position = "top") +
+  labs(title='pressure')+
+  theme(legend.position = "none") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
   axis.title.x = element_text(size = 12),
@@ -207,18 +226,17 @@ ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>0)) +
 - Are O-ring failures related to time/flight number?
 
 ```{r, fig.width=7, fig.height=4, echo=F, results='hide'} 
-ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
+six = ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_jitter(size=3, pch=20, alpha=3/4, stroke=3, position=position_jitter(w=0.2, h=0.1))+
   scale_color_manual(labels = c("ignored by NASA","used by NASA"),
                                 values = rev(c("black","olivedrab"))) +
   scale_x_continuous(name = "Flight number")+
-  scale_y_discrete(name = "Number of O-ring\n failures")+
+  #scale_y_discrete(name = "Number of O-ring\n failures")+
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(title=expression(~bold('Figure 4:')~' O-ring failure as a function of flight number/time'),
-   color="Observations:")+
-  theme(legend.position = "top") +
+  labs(title='flight number/time') +
+  theme(legend.position = "none") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
   axis.title.x = element_text(size = 12),
@@ -230,30 +248,29 @@ ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) +
 #not sure if we can make this assumption that flight number=time? made this code block hidden
 ```
 
+```{r, fig.width=8, fig.height=3}
+grid.arrange(four, five, six,
+             nrow=1)
+```
 **Multivariate Analysis**
 
 - How do both `Temp` and `Pressure` affect `O.ring` failure?
 
 ```{r}
-# Specify levels of O.ring failure
-df$O.ring[which(df$O.ring == 0)] <- 0
-df$O.ring[which(df$O.ring == 1)] <- 1
-df$O.ring[which(df$O.ring == 2)] <- 2
-# Define 3 level factor of O.ring failures
-df$O.ringFactor <- as.factor(df$O.ring)
-# Sanity check
-levels(df$O.ringFactor)
+#3d scatter plot
+#Colors
+colors <- c("olivedrab", "orange", "red")
+colors <- colors[as.numeric(df$O.ring)+1]
+scatterplot3d(x=df$Temp, y=df$Pressure, z=df$O.ring,
+              #angle = 80,
+              main= expression(~bold('Figure 3:')~' O-ring failure as a function of temperature and pressure'),
+              xlab = "Temperature (°F)",
+              ylab = "Pressure",
+              zlab = "Number of O-ring failures",
+              pch = 20, cex.symbols=3,
+              color=colors,
+              grid=TRUE, box=FALSE)
 
-# Build 3d scatter plot
-#fig <- plot_ly(df, x = ~ Temp, y = ~ Pressure, z = ~ O.ringFactor,
-#               color = ~ O.ringFactor,
-#               colors = c('olivedrab', 'orange2',"orangered2"))
-#fig <- fig %>% add_markers()
-#fig <- fig %>% layout(scene = list(xaxis = list(title = 'Temperature (°F)'),
-#                     yaxis = list(title = 'Pressure'),
-#                     zaxis = list(title = 'Number of O-ring failures')))
-
-#fig
 ```
 
 
@@ -353,32 +370,46 @@ stargazer(model_b,  type="text")
 ```
 
 $$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
-
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
 - (1) $\pi$ vs. Temp:
 
 ```{r, fig.width=5, fig.height=3.5}
+# Plot dimensions
+par(mfrow=c(3,1))
+##### O.ring failure vs temp
 plot(df$Temp, df$O.ring/df$Number,
-     xlab='Temperature (°F)',
+     xlab=" " ,
      ylab=expression(pi),
      pch=20, cex=3,
      col="black",
      xlim=c(31,81),
      ylim=c(0,1))
 # Title
-title(expression(bold("Figure 6:")~pi~"as a function of temperature (°F)"), adj=0)
+title(expression(bold("Figure 4:")~pi~"as a function of temperature (°F)"), adj=0)
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
 # Curve
 curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
-```
 
+##### pi with CI vs temp
+plot(df$Temp, df$O.ring/df$Number,
+     xlab= " ",
+     ylab=expression(pi),
+     pch=20, cex=3,
+     xlim=c(31,81),
+     ylim=c(0,1))
+# Title
+title(expression("with confidence intervals"), adj=0)
+# Betas
+b0 <- model_b$coefficients[1]
+b1 <- model_b$coefficients[2]
+curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
+lines(t, CI_lower_pi, lty = 'dashed')
+lines(t, CI_higher_pi, lty = 'dashed')
 
-- (2) Expected number of failures vs. Temp.
-
-```{r, fig.width=5, fig.height=3.5}
+##### Expected number of failures vs temp
 plot(df$Temp, df$O.ring,
      xlab='Temperature (°F)',
      ylab="Expected number of O-ring failures",
@@ -387,7 +418,7 @@ plot(df$Temp, df$O.ring,
      xlim=c(31,81),
      ylim=c(0,6))
 # Title
-title(expression(bold("Figure 7:")~"Expected number of failures as a function of temperature (°F)"), adj=0)
+title(expression("expected number of failures as a function of temperature (°F)"), adj=0)
 ## Binomial betas
 # Betas
 b0 <- model_b$coefficients[1]
@@ -410,30 +441,12 @@ CI_higher_pi <- exp(CI_higher_linear)/(1+exp(CI_higher_linear))
 ```
 
 
-```{r, fig.width=5, fig.height=3.5}
-plot(df$Temp, df$O.ring/df$Number,
-     xlab='Temperature (°F)',
-     ylab=expression(pi),
-     pch=20, cex=3,
-     xlim=c(31,81),
-     ylim=c(0,1))
-# Title
-title(expression(bold("Figure 8:")~pi~"as a function of temperature (°F)"), adj=0)
-# Betas
-b0 <- model_b$coefficients[1]
-b1 <- model_b$coefficients[2]
-curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
-lines(t, CI_lower_pi, lty = 'dashed')
-lines(t, CI_higher_pi, lty = 'dashed')
-```
-
 - The confidence band is wider when temperatures are lower than`r min(df$Temp)` because there are no observations below `r min(df$Temp)`.
 
 (d) The temperature was 31° at launch for the Challenger in 1986. Estimate the probability of an O-ring failure using this temperature, and compute a corresponding confidence interval. Discuss what assumptions need to be made in order to apply the inference procedures.
 
 - The probability of O-ring failure when temperature is 31°:
 ```{r}
-
 # Data to extrapolate
 predict.data <- data.frame(Temp = 31)
 
@@ -531,7 +544,7 @@ hist(results[,1],
      xlim=c(0,1),ylim=c(0,150),
      main="31 (°F)", adj=1)
 # Title
-title(expression(bold("Figure 9:")~"Probability of failure when temperature:"), adj=0)
+title(expression(bold("Figure 5:")~"Probability of failure when temperature:"), adj=0)
 # Histogram for temp = 72
 hist(results[,2],
      breaks=20,
@@ -586,17 +599,16 @@ $$ \cfrac{O.ring}{Number} = 0.616 - 0.008Temp$$
 
 
 - Model diagnostics:
-```{r, fig.width=5, fig.height=3.5}
+```{r}
 # Plot histograms of confidence intervals
 par(mfrow=c(2,1))
-
 # Residuals vs fitted values
 plot(model_4$fitted.values, model_4$residuals,
      pch=20, cex=2, main=NULL,
      xlab="Fitted values",
      ylab="Residuals")
 # Title
-title(expression(bold("Figure 10:")~"Residual vs. fitted values &"), adj=0)
+title(expression(bold("Figure 6:")~"Residual vs. fitted values &"), adj=0)
 # Quantile-quantile plot
 qqnorm(df$O.ring,
      pch=20, cex=2, main=NULL,
