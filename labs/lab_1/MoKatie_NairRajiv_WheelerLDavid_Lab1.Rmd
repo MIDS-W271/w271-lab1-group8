@@ -276,13 +276,13 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 ```{r, warning=F}
 df["Fail"] <- ifelse(df$O.ring>=1, 1, 0)
 # Estimate binomial logistic regression model
-model_a <- glm(O.ring/Number ~ Temp + Pressure,
+model_a <- glm(O.ring/Number ~ Temp+Pressure,
                family = binomial(link = logit),
                weights = Number,
                data = df)
 
 # Estimate binary logistic regression model
-model_a.1 <- glm(Fail ~ Temp + Pressure,
+model_a.1 <- glm(Fail ~ Temp+Pressure,
                family = binomial(link = logit),
                data = df)
 
@@ -311,12 +311,26 @@ For the Logistic regression binomial model with Temperature and Pressure include
 
 
 ** Binary Model** 
+
 $$ logit\left(\hat{\pi}\right)= 13.292 - 0.229\text{Temp} + 0.010\text{Pressure} $$ 
 
 ```{r}
 1/exp(summary(model_a.1)$coefficients)
 ```
 For the Logistic regression binary model with Temperature and Pressure included, we see that a unit increase in temperature changes the odds of failure by 1.25 times.
+
+```{r}
+b <- model_a$coefficients
+
+curve(exp(b[1]+b[2]*x + b[3]*200)/(1+exp(b[1]+b[2]*x + b[3]*200)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", col="blue")
+text(x=40, y=0.7, label="Binomial", col = "Blue", title("Binomial vs Binary Logistic Regression (At Pressure=200)"))
+
+
+b <- model_a.1$coefficients
+
+curve(exp(b[1]+b[2]*x+ b[3]*200)/(1+exp(b[1]+b[2]*x+ b[3]*200)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", add=TRUE, col="black")
+text(x=65, y=0.7, label="Binary", col = "Black")
+```
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
 
@@ -460,15 +474,25 @@ data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 
 
 For parametric bootstrap, we do the following steps.
+
 1. Create new column o.ring2 and initialize to o.ring. This column will be updated in each iteration.
+
 2. Calculate Z the linear outcome using $Z = \beta_0+\beta_{Temp}*Temp$ (vector of size 23)
+
 3. Calculate $\hat\pi = \cfrac{e^Z}{ 1+e^Z}$ (vector of size 23)
+
 4. Do the following steps in a loop (1..1000):
+
 * sample 23 points $d$ from original dataset with replacement
+
 * subset $\pi$ values corresponding to the random subset generated above
+
 * Generate vector of size 23 of binomials 0-6 $O.ring2$ that represent the outcomes, using the built in rbinom function by passing in the pi's generated in prior step.
+
 * Fit the binomial logistic regression model with new datapoints $d$ and outcomes $O.ring2$ 
+
 * run predictions for 31 and 72 degrees and save results
+
 5. select the 5% and 95% quantiles from the predictions accumulated in the loop above and report
 
 
@@ -640,7 +664,6 @@ This represents the log odds of the fraction of O-rings that fail. To calculate 
 
 
 ```{r}
-exp(model_b$coefficients)
 
 1/exp(model_b$coefficients)
 ```
@@ -650,4 +673,4 @@ Here we see that a unit decrease in temperature increases the odds of failure in
 
 In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
 
-In summary, we explored the relationship to pressure vs failure and temperature vs failure. We note a higher incidence of failures at lower temperatures, wheras no strong evidence of a relationship to pressure was identified. We 
+In summary, we explored the relationship to pressure vs failure and temperature vs failure. We note a higher incidence of failures at lower temperatures, whereas no strong evidence of a relationship to pressure was identified.
