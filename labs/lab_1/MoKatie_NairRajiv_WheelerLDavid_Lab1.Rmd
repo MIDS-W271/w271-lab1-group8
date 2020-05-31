@@ -283,7 +283,7 @@ stargazer(model_a, model_a.1,
 1/exp(summary(model_a.1)$coefficients)
 ```
 
-Here we estimate the bimonial and binary regression models separately. For the binary model, we introduce a new flag "Fail" that is set to 1 if at least one failure, 0 otherwise. This effectively eliminates the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level. By exponentiating the coefficients and taking inverse, we can interpret the 
+Here we estimate the bimonial and binary regression models separately. For the binary model, we introduce a new flag "Fail" that is set to 1 if at least one failure, 0 otherwise. This effectively eliminates the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level. By exponentiating the coefficients and taking inverse, we can interpret the effect of temperature on odds of failure.
 
 ** Binomial Model **
 
