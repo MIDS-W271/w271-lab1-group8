@@ -60,11 +60,11 @@ library(car) # For Likelihood Ratio Tests on the fly
 library(data.table) # to enable creation and coercion of data tables
 library(stargazer) # to tabulate regression tables
 library(skimr) # for basic EDA
-library(Hmisc) # for basic EDA
+#library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
 library(boot) # framework for bootstrapping
-library(plotly) # For 3d scatterplot
+#library(plotly) # For 3d scatterplot
 ```
 
 # Load data
@@ -405,21 +405,47 @@ lines(t, CI_higher_pi, lty = 'dashed')
 
 - The probability of O-ring failure when temperature is 31°:
 ```{r}
-# Data to exptrapolate
-predict.data <- data.frame(Temp = 20)
+# Data to extrapolate
+predict.data <- data.frame(Temp = 31)
+
 # Predict surface/link
-predict(object = model_b,
-        newdata = predict.data,
-        type = "link")
+predict.linear <- predict(object = model_b,
+                          newdata = predict.data,
+                          type = "link")
+
 # Predict response 
-predict(object = model_b, 
-        newdata = predict.data,
-        type = "response")
-# Confidence interval
-c(CI_lower_pi[[1]], CI_higher_pi[[1]])
+predict.pi <- predict(object = model_b, 
+                      newdata = predict.data,
+                      type = "response")
+
+# Confidence interval for 31deg was computed above in part (c)
+data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 ```
 
-- Thus, the probability of O-ring failure is `r predict(object = model_b, newdata = predict.data, type = "response")` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
+```{r}
+#THIS CAN BE DELETED
+# Data to extrapolate
+predict.data <- data.frame(Temp = 72)
+
+# Predict surface/link
+predict.linear <- predict(object = model_b,
+                          newdata = predict.data,
+                          type = "link",
+                          se=T)
+
+# Predict response 
+predict.pi <- predict(object = model_b, 
+                      newdata = predict.data,
+                      type = "response")
+predict.pi
+#pi_hat <- exp(predict.linear$fit)/(1+exp(predict.linear$fit))
+alpha=0.1
+CI_linear <- predict.linear$fit + qnorm(p=c(alpha/2, 1-alpha/2))*predict.linear$se.fit
+exp(CI_linear)/(1+exp(CI_linear))
+
+```
+
+- Thus, the probability of O-ring failure at 31° is `r predict.pi` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
 - The assumptions needed to apply the inference procedures are:
   - We are assuming a linear relationship between the log odds of failure of an O-ring and Temperature.
   - We are assuming that the observations are independent. i.e. The failure of one O-ring does not increase the odds of the other to fail
@@ -428,7 +454,7 @@ c(CI_lower_pi[[1]], CI_higher_pi[[1]])
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal et al. (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27
 
 For parametric bootstrap, we do the following steps.
-create new column o.ring2 and initialize to o.ring. This column will be updated in each iteration.
+Create new column o.ring2 and initialize to o.ring. This column will be updated in each iteration.
 Do the following steps in a loop (1..100):
 * sample 23 points from dataset with replacement
 * fit the model using the above points
@@ -507,6 +533,49 @@ hist(results[,2],
      col="orange",
      main="Bootstrapped confidence intervals for temperature (°F)= 72")
 ```
+
+```{r warning=FALSE}
+# KATIE'S ATTEMPT
+set.seed(1)
+
+# Use pi estimated from the model
+z = model_b$coefficients["(Intercept)"] + model_b$coefficients["Temp"] * df$Temp
+pi = exp(z)/(1+exp(z))
+
+# Dataframe to populate with results
+results <- data.frame(pred.31 = numeric(), pred.72 = numeric())
+
+for (s in 1:1000){
+  
+  # Simulate outcomes using rbinom
+  O.ring2 <- rbinom(n=23, # sample size
+                size=6, # number of trials
+                prob=pi) # probability
+  d <- data.frame(df, O.ring2)
+  
+  # Estimate model with rbinom bootstrap outcomes
+  mod <- glm(O.ring2/Number ~ Temp,
+               family = binomial(link = logit),
+               weights = Number,
+               data = d)
+  
+  # Estimate confidence interval for temp = 31
+  temp.31.data <- data.frame(Temp=31)
+  temp.31 <- predict(object = mod, newdata = temp.31.data,
+                      type = "response")
+  # Estimate confidence interval for temp = 72
+  temp.72.data <- data.frame(Temp=72)
+  temp.72 <- predict(object = mod, newdata = temp.72.data,
+                      type = "response")
+  results <- results %>% add_row(pred.31 = temp.31, pred.72 = temp.72)  
+}
+
+paste("For 31 degrees CI =")
+quantile(results[,1], probs=c(0.05, 0.95))
+paste("For 72 degrees CI =")
+quantile(results[,2], probs=c(0.05, 0.95))
+```
+
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
 
