@@ -542,16 +542,25 @@ set.seed(1)
 z = model_b$coefficients["(Intercept)"] + model_b$coefficients["Temp"] * df$Temp
 pi = exp(z)/(1+exp(z))
 
+# Save the pi array to the dataframe
+df$O.ring.pi <- pi
+
 # Dataframe to populate with results
 results <- data.frame(pred.31 = numeric(), pred.72 = numeric())
 
 for (s in 1:1000){
   
+  I.sample <- sample(x = 1:nrow(df),
+                     size = 23,
+                     replace = TRUE)
+  # Populate d with samples
+  d <- df[I.sample,]  
+  
   # Simulate outcomes using rbinom
   O.ring2 <- rbinom(n=23, # sample size
                 size=6, # number of trials
-                prob=pi) # probability
-  d <- data.frame(df, O.ring2)
+                prob=d$O.ring.pi) # probability
+  d <- data.frame(d, O.ring2)
   
   # Estimate model with rbinom bootstrap outcomes
   mod <- glm(O.ring2/Number ~ Temp,
@@ -574,6 +583,20 @@ paste("For 31 degrees CI =")
 quantile(results[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
 quantile(results[,2], probs=c(0.05, 0.95))
+
+# Plot histograms of confidence intervals
+par(mfrow=c(2,1))
+# Histogram for temp = 31
+hist(results[,1],
+     breaks=50,
+     col="lightskyblue1",
+     main="Bootstrapped confidence intervals for temperature (°F)= 31")
+
+# Histogram for temp = 72
+hist(results[,2],
+     breaks=50,
+     col="orange",
+     main="Bootstrapped confidence intervals for temperature (°F)= 72")
 ```
 
 
