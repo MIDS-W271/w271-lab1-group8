@@ -475,14 +475,23 @@ data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal *et al.* (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27. At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
 
 For our parametric bootstrap procedure, we performed the following steps:
+
 1. Using our binomial model with temperature as the explanatory model, we calculate $Z$, the linear outcome, using $Z = \beta_0+\beta_{Temp}*Temp$, which results in a vector of size 23.
+
 2. Next, we calculate $\hat\pi = \cfrac{e^Z}{ 1+e^Z}$, which remains a vector of size 23.
+
 3. The calculated $\hat\pi$ is saved to the dataframe as `O.ring.pi`. 
+
 4. The original dataset is resampled with replacement to create a new dataset $d$ of size 23.
+
 5. A vector of size 23 of binomials 0-6 is generated as $O.ring2$, represent new outcomes, using the built in rbinom function by passing in the associated calculated $\hat\pi$ values.
-6. A new binomial logistic regression model is fitted with the resampled dataset $d$ and outcomes $O.ring2$ 
+
+6. A new binomial logistic regression model is fitted with the resampled dataset $d$ and outcomes $O.ring2$.
+
 7. The predictions for 31 and 72 degrees are found and the estimated probabilities are saved to $results$.
+
 8. Steps 4-7 are repeated and performed for a total of 1000 times.
+
 9. Finally, the 5% and 95% quantiles from the predictions for 31 and 72 degrees accumulated in $results$ are reported as the 90% confidence intervals.
 
 
