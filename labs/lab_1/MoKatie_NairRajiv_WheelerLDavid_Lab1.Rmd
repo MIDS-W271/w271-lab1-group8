@@ -445,7 +445,7 @@ In order to infer the probability of O-ring failure at 31°, we need to make the
 
 For our parametric bootstrap procedure, we performed the following steps:
 
-1. Using our binomial model with temperature as the explanatory model, we calculate $Z$, the linear outcome, using $Z = \beta_0+\beta_{Temp}*Temp$, which results in a vector of size 23.
+1. Using our binomial model with temperature as the explanatory model, we calculate $Z$, the linear outcome, using $Z = \beta_0+\beta_1*Temp$, which results in a vector of size 23.
 
 2. Next, we calculate $\hat\pi = \cfrac{e^Z}{ 1+e^Z}$, which remains a vector of size 23.
 
@@ -589,47 +589,64 @@ plot(model_d, which = 2)
 mtext("(b)", side = 3, padj = -2.5)
 ```
 
-- Assess the validity of the model assumptions: 
-  - **Assumption MLR.1 (Linear in Parameters):**
-    * The model is linear in its parameters.The $\hat{\beta} s$ are expressed as additive/linear functions of the response: O-ring failure.
-  - **Assumption MLR.2 (Random Sampling):**
-    * It seems doubtful that these O-rings were sampled randomly, or even *sampled* at all- **all** O-rings were likely collected from `r max(df$Flight)` flights. Further survival bias could be introduced by the inability of NASA to collect all O-rings from flights that malfunctioned.
-  - **Assumption MLR.3 (No Perfect Collinearity):**
-    * Since there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
-  - **Assumption MLR.4 (Zero Conditional Mean):**
-    * The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot (**Figure 6a**) documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
-  - **Assumption MLR.5 (Homoskedasticity):**
-    * Homoskedasticity does not appear to be satisfied. Evidence for heteroskedasticity is again provided by the residual versus fitted values plot (**Figure 6a**). If variances were homoskedastic we should see uniform horizontal bands/scatters of points across these plots. However, note that we see non-constant variability in the residuals across the range of fitted values.
-  - **Assumption MLR.6 (Normality):**
-    * The assumption of normality is not satisfied. Evidence of this assumption is presented in the qq-plot  (**Figure 6b**).
-  - **Lastly, this model formulation possesses another shortcomings**:
-    * The probabilities are linearly related to the predictors for all of their possible values.
+Below, we assess the validity of the linear probability model assumptions.
 
-- Explain why:
-- We select the binary logistic regression model because:
+**Assumption MLR.1 (Linear in Parameters):**
+
+The model is linear in its parameters. The $\hat{\beta} s$ are expressed as additive/linear functions of the response, O-ring failure.
+
+**Assumption MLR.2 (Random Sampling):**
+
+It seems doubtful that these O-ring outcomes were sampled randomly, or even sampled at all, as all of the O-rings data were likely collected from the 23 flights. It is not clear how the 23 flights were selected, however, it appeared that we only had observations for higher temperatures. If there is random sampling of the launch day throughout all seasons of the year, we would expect to have data that represents temperatures from the full range of possible temperatures. Further survival bias could be introduced by the inability of NASA to collect all O-rings from flights that malfunctioned.
+
+**Assumption MLR.3 (No Perfect Collinearity):**
+
+Since there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
+
+**Assumption MLR.4 (Zero Conditional Mean):**
+
+The zero-conditional mean assumption, $E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, strictly speaking. The residual versus fitted values plot (**Figure 6a**) documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
+
+**Assumption MLR.5 (Homoskedasticity):**
+
+Homoskedasticity does not appear to be satisfied. Evidence for heteroskedasticity is again provided by the residual versus fitted values plot (**Figure 6a**). If variances were homoskedastic, we should see uniform horizontal bands/scatters of points across these plots. However, note that we see non-constant variability in the residuals across the range of fitted values.
+
+**Assumption MLR.6 (Normality):**
+
+The assumption of normality is not satisfied. Evidence of this assumption is presented in the qq-plot (**Figure 6b**), as the points deviate from the dotted line.
+
+Lastly, this model formulation possesses another shortcoming, in that the probabilities are linearly related to the predictors for all of their possible values.
+
+We select the binary logistic regression model because:
+
   - The problem is clearly asking a success/failure question. The response, O-ring failure is either binary (e.g. 0 or 1), binomial (e.g. a proportion from 0 to 1), or counts (e.g. 0,1,2,3,...,n) which can ultimately be expressed as a binary or binomial variable.
+  
   - The MLR assumptions discussed above do not hold and therefore the linear regression model is not suitable for this problem.
 
 # Part 5 (10 points)
 
 Interpret the main result of your final model in terms of both odds and probability of failure. Summarize the final result with respect to the question(s) being asked and key takeaways from the analysis.
 
-Our final model model is the binomial logistic regression model $$logit\left(\hat\pi\right) = 5.085 - 0.116 Temp$$
+Our final model is the binomial logistic regression model $$logit\left(\hat\pi\right) = 5.085 - 0.116 Temp$$
 
-This represents the log odds of the fraction of O-rings that fail. To calculate the odds, we exponentiate the coefficients as below. 
+This represents the log odds of the fraction of O-rings that fail. To calculate the odds, we exponentiate the coefficients. 
 
 ```{r}
 exp(model_b$coefficients)
+```
 
+To calculate the inverse odds, we inverse the exponentiated coefficients, as shown below. 
+
+```{r}
 1/exp(model_b$coefficients)
 ```
 
 Here we see that a unit decrease in temperature changes the odds of failure by 1.12 times.
 
-In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c (**Figure 4a-b**), we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50°F, 40°F to 30°F, we see corresponding probability of failure $\pi$ values of 0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure. Although the probability of failure rises at lower temperatures, the confidence intervals widen in response to the absence of data. To overcome the absence of data at lower temperatures, we attempted the bootstrapping technique to generate more observations. This however failed to narrow the confidence level at the lower temperature of 31 degrees. The wide confidence interval at the temperature of 31 degrees, should be enough justification to postpone the launch on a cold day since it is tempered by uncertainty.
+In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c (**Figure 4a-b**), we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50°F, 40°F to 30°F, we see corresponding probability of failure $\pi$ values of 0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure. Although the probability of failure rises at lower temperatures, the confidence intervals widen in response to the absence of data. Even with using parametric bootstrapping to estimate confidence intervals, we found the same result, that the confidence interval at the lower temperature of 31°F remains wide. The fact that there were no previous data point below temperature of 53°F at all, and the confidence interval at the temperature of 31°F was wide, should have been enough justification to postpone the launch on a cold day since it was tempered by uncertainty.
 
-We evaluated both the binary logistic regression models, where O-ring failure is a dichotomous function of the explanatory variables as well as the binomial logistic regression model that considers each o-ring as a separate data point. The Dalal paper prefers the binary model, since it does not have the assumption of independence across o-ring failures. However, we settled on the Binomial model as our final model considering that the observations are limited. 
+We evaluated both the binary logistic regression models, where O-ring failure is a dichotomous function of the explanatory variables as well as the binomial logistic regression model that considers each o-ring as a separate data point. Though the binary model may be more robust, since it does not have the assumption of independence across o-ring failures, the Dalal *et al.* utilizes both models throughout the analysis. We settled on the binomial model as our final model considering that the observations are limited. 
 
-In summary, we explored the relationship to pressure vs failure and temperature vs failure. Conclusions on these relationships should be, as noted above, conditioned on the paucity of data. We note a higher incidence of failures at lower temperatures. Moreover, all but one of the failures occurred at higher pressures. Equipped with more data a test for independence could be used to determine if levels of pressure are independent of levels of temperature (say 30-50, 51-70, 71-90 (°F)). Similarly, logistic regression models that captured the relationship between O-ring failure, temperature, pressure and the interaction of the two explanatory variables could reveal important information about physical processes that influence O-ring failure. 
+In summary, we explored the relationship to pressure vs O-ring failure and temperature vs O-ring failure. Conclusions on these relationships should be, as noted above, conditioned on the paucity of data. We note a higher incidence of failures at lower temperatures. Moreover, all but one of the failures occurred at higher pressures. Equipped with more data, a test for independence could be used to determine if levels of pressure are independent of levels of temperature (say 30-50, 51-70, 71-90 °F). Similarly, logistic regression models that captured the relationship between O-ring failure, temperature, pressure and the interaction of the two explanatory variables could reveal important information about physical processes that influence O-ring failure. 
 
 Regardless of the limitations and challenges, we learned that (i) launching rockets in cold temperatures is a bad idea and (ii) ignoring data, as NASA ignored the "outlying" values where 0 failures occurred, can be deadly. Both groups of models, the binary and binomial models, converged on these conclusions.
