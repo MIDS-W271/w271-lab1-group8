@@ -79,7 +79,7 @@ Conduct a thorough EDA of the data set. This should include both graphical and t
 
 In January of 1986, the launch of the space shuttle Challenger ended up in a tragic accident. After subsequent investigation, the root cause of the accident was identified to be caused from a gas leak through a booster rocket joint, typically sealed by an O-ring. The Dalal *et al.* (1989) paper explores the use of statistical modeling to predict the probability of failure of the O-rings. In this report, we aim to perform a similar analysis.
 
-The dataset used to examine the probability of O-ring failure in Challenger's previous space shuttle launches included 23 rows and 5 variables. The `Flight` column is made up of unique identifiers representing the flight number of a launch. The `Temp` column contains information about the temperature (°F) at launch, and ranges between 53 and 81 °F for the 23 data points. The `Pressure` column contains information about the combustion pressure (psi) at launch, and takes on only 3 values among the 23 data points: 50 100, or 200. The `O.ring` column represents the number of primary field `O-ring` failures in a launch, which is our outcome of interest. For this dataset, the `O.ring` column contains only the values 0, 1, or 2. The `Number` column contains the total number of primary field O-rings, which is 6 for all launches (three each for the two booster rockets). 
+The dataset used to examine the probability of O-ring failure in Challenger's previous space shuttle launches included 23 rows and 5 variables. The `Flight` column is made up of unique identifiers representing the flight number of a launch. The `Temp` column contains information about the temperature (°F) at launch, and ranges between 53 and 81 °F for the 23 data points. The `Pressure` column contains information about the combustion pressure (psi) at launch, and takes on only 3 values: 50, 100, or 200 psi. The `O.ring` column represents the number of primary field `O-ring` failures in a launch, which is our outcome of interest. For this dataset, the `O.ring` column contains only the values 0, 1, or 2. The `Number` column contains the total number of primary field O-rings, which is 6 for all launches (three each for the two booster rockets). 
 
 ```{r}
 # Structure
@@ -237,7 +237,7 @@ plot_number_o = ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) 
   plot.title = element_text(size = 12))
 ```
 
-When plotting the temperature against the number of O-ring failures, as shown in **Figure 2a** the launches with no O-ring failures tend to occur on the right hand side of the graph, where temperature is higher. This is consistent with the negative correlation of `r round(cor(df$Temp, df$O.ring),3)`. The lowest temperature at which there were no recorded O-ring failures was observed to be 66 °F. Above this temperature, we have one launch with 1 O-ring failure and one launch with 2 O-ring failures. The launches below 66 °F all had at least 1 O-ring failure. The authors of the paper mentioned that launches with no O-ring failures were not included in the original thermal distress analysis prior to the Challenger accident, which are highlighted in green in the plot above. 
+When plotting the temperature against the number of O-ring failures, as shown in **Figure 2a** the launches with no O-ring failures tend to occur on the right hand side of the graph, where temperature is higher. This is consistent with the negative correlation of `r round(cor(df$Temp, df$O.ring),3)`. The lowest temperature at which there were no recorded O-ring failures was observed to be 66 °F. Above this temperature, we have one launch with 1 O-ring failure and one launch with 2 O-ring failures. The launches below 66 °F all had at least 1 O-ring failure. The authors of the paper mentioned that launches with no O-ring failures were not included in the original thermal distress analysis prior to the Challenger accident, which are highlighted in green in the plot below. 
 
 In **Figure 2b**, there were the most number of recorded launches at 200 psi, and at this pressure, there was the most number of launches with at least 1 O-ring failure. At 200 psi, 4 out of the 15 launches (27%) had at least 1 O-ring failure. At 50 psi, 1 out of the 6 launches (17%) had at least 1 O-ring failure. There were no O-ring failures for launches at 100 psi, though there were only 2 recorded data points. The correlation between the two variables is slightly positive, at `r round(cor(df$O.ring, df$Pressure),3)`.
 
@@ -278,7 +278,7 @@ ggplot(df, aes(x=Temp, y=Pressure, colour=colors)) +
   plot.title = element_text(size = 12))
 ```
 
-In order to understand if there is a multivariate relationship between the number of O-ring failures, temperature, and pressure, we created a scatterplot in **Figure 3**. The number of O-ring failures is expressed as a function of both temperature and pressure. Green points represent those temperature and pressure conditions where 0 O-rings failed- these were the data ignored by NASA. Similarly, orange and red points represent those conditions under which 1 or 2 O-rings failed, respectively. As we showed earlier, there was little correlation between pressure and temperature. There does seem to be a larger range in temperatures as well as more O-ring failures for 200 psi, but this could just be due to the a greater number of data points at that level. 
+In order to understand if there is a multivariate relationship between the number of O-ring failures, temperature, and pressure, we created a scatterplot in **Figure 3**. The number of O-ring failures is expressed as a function of both temperature and pressure. Green points represent those temperature and pressure conditions where 0 O-rings failed- these were the data ignored by NASA. Similarly, orange and red points represent those conditions under which 1 or 2 O-rings failed, respectively. As we discussed earlier, there was little correlation between pressure and temperature. There does seem to be a larger range in temperatures as well as more O-ring failures for 200 psi, but this could just be due to the a greater number of data points at that level. 
 
 # Part 2 (20 points)
 
@@ -286,7 +286,7 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 
 (a) The authors use logistic regression to estimate the probability an O-ring will fail. In order to use this model, the authors needed to assume that each O-ring is independent for each launch. Discuss why this assumption is necessary and the potential problems with it. Note that a subsequent analysis helped to alleviate the authors’ concerns about independence.
 
-The authors explore the use of the binomial and the binary models for the given launch data. The independence assumption is necessary for both models because it allows the use of the binomial probability mass function. However, the binomial model likely violates the assumption that each of the six 0-rings would fail independently at each temperature, $t$, and pressure, $s$. The failure of 1 or more of the O-rings could potentially influence the failure of the remaining O-rings, possibly due to exposure to damaging conditions or additional stress. On the other hand, the binary logistic regression model satisfies this assumption since each trial combines the success or failure of all 6 O-rings as one outcome, which is more likely to be independent from launch to launch. To enable the binary logistic regression model, the authors introduced a binary flag for failure, where one or more O-ring failures were simply marked as a failure.
+The authors explore the use of the binomial and the binary models for the given launch data. The independence assumption is necessary for both models because it allows the use of the binomial probability mass function. However, the binomial model likely violates the assumption that each of the six O-rings would fail independently at each temperature, $t$, and pressure, $s$. The failure of 1 or more of the O-rings could potentially influence the failure of the remaining O-rings, possibly due to exposure to damaging conditions or additional stress. On the other hand, the binary logistic regression model satisfies this assumption since each trial combines the success or failure of all 6 O-rings as one outcome, which is more likely to be independent from launch to launch. To enable the binary logistic regression model, the authors introduced a binary flag for failure, where one or more O-ring failures were simply marked as a failure.
 
 The authors found that the fits between the the binomial and the binary models were comparable. Furthermore, the outcomes for the binary and binomial models are not substantially different, as only 2 launches had 2 primary O-ring failures and the majority of the launches corresponded to 0 or 1 O-rings failures. Because of the analysis, we were comfortable with using the binomial model, despite the likely violation of the independence assumption. Because the dataset itself is quite limited with only 23 flight launches, a binomial model is able to make use of all 6 data points from each launch, while the binary model compresses the information for the 6 O-rings into a single data point. 
 
@@ -308,17 +308,23 @@ model_binary <- glm(Fail ~ Temp + Pressure,
 stargazer(model_binomial, model_binary, type="text")
 ```
 
-Here we estimate the bimonial (1) and binary (2) regression models separately. For the binary model, we introduced a new flag variable "Fail" that is set to 1 if at least one failure, and 0 otherwise, which helps satisfy the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level for both models. By exponentiating the coefficients and taking inverse, we can interpret the effect of temperature on odds of failure.
+Here we estimate the bimonial (1) and binary (2) regression models separately. For the binary model, we introduced a new flag variable `Fail` that is set to 1 if at least one failure, and 0 otherwise, which helps satisfy the independence assumption. From the above model summary, we see that temperature is the only significant variable at the 0.05 level for both models. By exponentiating the coefficients and taking inverse, we can interpret the effect of temperature on odds of failure.
 
 **Binomial Model**
+
+The binomial model is estimated as:
+
 $$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$
 ```{r}
 # Inverse odds ratio for binomial model
 1/exp(summary(model_binomial)$coefficients)
 ```
-For the Logistic regression binomial model with `Temperature` and `Pressure` included, we see that a unit decrease in temperature changes the odds of failure by 1.1 times
+For the Logistic regression binomial model with `Temperature` and `Pressure` included, we see that a unit decrease in temperature changes the odds of failure by 1.1 times.
 
 **Binary Model** 
+
+The binary model using `Fail` as the outcome variable is estimated as:
+
 $$ logit\left(\hat{\pi}\right)= 13.292 - 0.229\text{Temp} + 0.010\text{Pressure} $$ 
 ```{r}
 # Inverse odds ratio for binary model
@@ -336,9 +342,9 @@ Anova(model_binomial, test='LR')
 
 (d) The authors chose to remove Pressure from the model based on the LRTs. Based on your results, discuss why you think this was done. Are there any potential problems with removing this variable?
 
-Based on the likelihood ratio test above, `Pressure` is not an important explanatory variable and could be removed from the model. We tested $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for `Pressure`. The $-2log(\Lambda)$ = `r Anova(model_binomial, test='LR')[2,1]` and the *p*-value of $P\left(\chi^2_1 > \right.$ `r Anova(model_binomial, test='LR')[2,1]`) = `r Anova(model_binomial, test='LR')[2,3]` > $\alpha$ 0.05. 
+Based on the likelihood ratio test above, `Pressure` is not an important explanatory variable and could be removed from the model. We tested $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for `Pressure`. The $-2log(\Lambda)$ = `r Anova(model_binomial, test='LR')[2,1]` and the *p*-value of $P\left(\chi^2_1 > \right.$ `r Anova(model_binomial, test='LR')[2,1]`) = `r Anova(model_binomial, test='LR')[2,3]` > $\alpha = 0.05$. 
 
-Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test and because it does not contribute much systematic variation to the model (i.e `Pressure` can only take values `r unique(df$Pressure)`). Although it was removed, it still could be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Similarly, the authors report (i) very weak evidence of a pressure effect and (ii) overlapping confidence intervals for the expected number of incidents when pressure was 50 and 200. Together these bits of evidence support the hypothesis that `Pressure` could contribute to the mechanism by which `O.rings` fail.
+Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test and because it does not contribute much systematic variation to the model (i.e. `Pressure` can only take values `r unique(df$Pressure)`). Although it was removed, it still could be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 O-rings failed occured when `Pressure` was high at 200 psi and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 O-ring failed occured when `Pressure` was high at 200 psi. Similarly, the authors report (i) very weak evidence of a pressure effect and (ii) overlapping confidence intervals for the expected number of incidents when pressure was 50 and 200 psi. Together these bits of evidence support the hypothesis that `Pressure` could contribute to the mechanism by which O-rings fail.
 
 Potential problems could arise by the omission of `Pressure` from the model, however we are unable to draw conclusions on the value of `Pressure` with such limited variation in the data. While a simple model without `Pressure` might be sufficient, a model with `Pressure`, if more data existed, and an interaction term between `Temp` and `Pressure` might help guide interpretation. If `Pressure` is correlated with both the explanatory variable `Temp` and the outcome `O.ring`, removal of `Pressure` could introduce omitted variable bias.
 
@@ -360,11 +366,13 @@ model_b <- glm(O.ring/Number ~ Temp,
 stargazer(model_b, type="text")
 ```
 
+The model with `Temp` as the sole explanatory variable is estimated as:
+
 $$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
 
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
-Please see **Figure 4** below for the plots $\pi$ vs `Temp` with confidence intervals (**Figure 4a**) and the expected number of failures vs `Temp`(**Figure 4b**).
+Please see **Figure 4** below for the plots $\pi$ vs. `Temp` with confidence intervals (**Figure 4a**) and the expected number of failures vs. `Temp` (**Figure 4b**).
 
 (c) Include the 95% Wald confidence interval bands for $\pi$ on the plot. Why are the bands much wider for lower temperatures than for higher temperatures?
 
@@ -418,7 +426,7 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x))*6, add=T)
 
 ```
 
-The confidence band is wider when temperatures are lower than `r min(df$Temp)`(°F) because there are no observations below `r min(df$Temp)`(°F).
+The confidence band is wider when temperatures are lower than `r min(df$Temp)` °F because there are no observations below `r min(df$Temp)` °F.
 
 (d) The temperature was 31° at launch for the Challenger in 1986. Estimate the probability of an O-ring failure using this temperature, and compute a corresponding confidence interval. Discuss what assumptions need to be made in order to apply the inference procedures.
 
@@ -437,9 +445,9 @@ predict.pi <- predict(object = model_b,
 data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 ```
 
-The probability of O-ring failure at 31(°F) is `r predict.pi` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`. 
+The probability of O-ring failure at 31°F is `r predict.pi` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`. 
 
-In order to infer the probability of O-ring failure at 31(°F), we need to make the assumption that there is a linear relationship between the log odds of failure of an O-ring and Temperature. Because we use the binomial model, we do not meet the independence assumption. However, the fits between the binomial and binary models are comparable, as discussed above. 
+In order to infer the probability of O-ring failure at 31°F, we need to make the assumption that there is a linear relationship between the log odds of failure of an O-ring and Temperature. Because we use the binomial model, we do not meet the independence assumption. However, the fits between the binomial and binary models are comparable, as discussed above. 
  
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal *et al.* (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of `Temp`; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27. At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
 
@@ -453,7 +461,7 @@ For our parametric bootstrap procedure, we performed the following steps:
 
 4. The original dataset is resampled with replacement to create a new dataset $d$ of size 23.
 
-5. A vector of size 23 of binomials 0-6 is generated as $O.ring2$, represent new outcomes, using the built in rbinom function by passing in the associated calculated $\hat\pi$ values.
+5. A vector of size 23 of binomials 0-6 is generated as $O.ring2$, representing new outcomes, using the built-in `rbinom` function by passing in the associated calculated $\hat\pi$ values.
 
 6. A new binomial logistic regression model is fitted with the resampled dataset $d$ and outcomes $O.ring2$.
 
@@ -511,7 +519,7 @@ data.frame(temp=c(31,72), lower.CI=c(CI.31[1],CI.72[1]), upper.CI=c(CI.31[2],CI.
 
 ```
 
-Using the parametric bootstrap method to estimate confidence interval, we again found that the confidence interval for 31 (°F) is quite wide at `r round(CI.31[1],4)` and `r round(CI.31[2],4)`, due to the lack of data points at low temperatures. The confidence interval estimated for 72 (°F) is much tighter, at `r round(CI.72[1],4)` and `r round(CI.72[2],4)`. 
+Using the parametric bootstrap method to estimate confidence interval, we again found that the confidence interval for 31°F is quite wide at `r round(CI.31[1],4)` and `r round(CI.31[2],4)`, due to the lack of data points at low temperatures. The confidence interval estimated for 72°F is much tighter, at `r round(CI.72[1],4)` and `r round(CI.72[2],4)`. 
 
 
 ```{r, fig.width=8, fig.height=6, echo=F}
@@ -538,7 +546,7 @@ hist(results[,2],
 mtext('(b) Probability of Failure at 72 °F', side = 3, padj = -2.5)
 ```
 
-Out of the 1000 simulated datasets, we plotted a histogram of their probability of failures. The confidence intervals were taken as the 5th and 95th percentile of the distributions. In **Figure 5a**, the probability of failures for 31(°F) took on the full range of 0 and 1, and had a left skew towards 1. In contrast, the probability of failures for 72(°F) in **Figure 5b** were more concentrated at the left end towards 0. 
+Out of the 1000 simulated datasets, we plotted a histogram of their probability of failures. The confidence intervals were taken as the 5th and 95th percentile of the distributions. In **Figure 5a**, the probability of failures for 31°F took on the full range of 0 and 1, and had a left skew towards 1. In contrast, the probability of failures for 72°F in **Figure 5b** were more concentrated at the left end towards 0. 
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
 
@@ -629,19 +637,25 @@ Interpret the main result of your final model in terms of both odds and probabil
 
 Our final model is the binomial logistic regression model $$logit\left(\hat\pi\right) = 5.085 - 0.116 Temp$$
 
-This represents the log odds of the fraction of O-rings that fail. To calculate the odds, we exponentiate the coefficients. 
+This represents the log odds of the fraction of O-rings that fail. To calculate the odds, we exponentiate the temperature coefficient. 
 
 ```{r}
-exp(model_b$coefficients)
+exp(model_b$coefficients['Temp'])
 ```
 
-To calculate the inverse odds, we inverse the exponentiated coefficients, as shown below. 
+To calculate the inverse odds, we inverse the exponentiated coefficient, as shown below. 
 
 ```{r}
-1/exp(model_b$coefficients)
+c<-1
+1/exp(c*model_b$coefficients['Temp'])
 ```
 
-Here we see that a unit decrease in temperature changes the odds of failure by 1.12 times.
+```{r}
+c<-20
+1/exp(c*model_b$coefficients['Temp'])
+```
+
+Here we see that a unit decrease in temperature increases the odds of failure by 1.12 times. A 20 degree drop in temperature, such as the difference between the lowest recorded launch temperature in the dataset and the Challenger space shuttle launch temperature, results in an increase in odds of failure by 10 times!
 
 In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c (**Figure 4a-b**), we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50°F, 40°F to 30°F, we see corresponding probability of failure $\pi$ values of 0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure. Although the probability of failure rises at lower temperatures, the confidence intervals widen in response to the absence of data. Even with using parametric bootstrapping to estimate confidence intervals, we found the same result, that the confidence interval at the lower temperature of 31°F remains wide. The fact that there were no previous data point below temperature of 53°F at all, and the confidence interval at the temperature of 31°F was wide, should have been enough justification to postpone the launch on a cold day since it was tempered by uncertainty.
 
