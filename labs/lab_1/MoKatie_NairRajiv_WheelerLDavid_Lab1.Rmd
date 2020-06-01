@@ -508,6 +508,7 @@ for (s in 1:1000){
 CI.31 <- quantile(results[,1], probs=c(0.05, 0.95))
 CI.72 <- quantile(results[,2], probs=c(0.05, 0.95))
 data.frame(temp=c(31,72), lower.CI=c(CI.31[1],CI.72[1]), upper.CI=c(CI.31[2],CI.72[2]))
+
 ```
 
 Using the parametric bootstrap method to estimate confidence interval, we again found that the confidence interval for 31 °F is quite wide at `r round(CI.31[1],4)` and `r round(CI.31[2],4)`, due to the lack of data points at low temperatures. The confidence interval estimated for 72 °F is much tighter, at `r round(CI.72[1],4)` and `r round(CI.72[2],4)`. 
@@ -594,7 +595,7 @@ mtext("(b)", side = 3, padj = -2.5)
   - **Assumption MLR.2 (Random Sampling):**
     * It seems doubtful that these O-rings were sampled randomly, or even *sampled* at all- **all** O-rings were likely collected from `r max(df$Flight)` flights. Further survival bias could be introduced by the inability of NASA to collect all O-rings from flights that malfunctioned.
   - **Assumption MLR.3 (No Perfect Collinearity):**
-    * ince there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
+    * Since there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
   - **Assumption MLR.4 (Zero Conditional Mean):**
     * The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot (**Figure 6a**) documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
   - **Assumption MLR.5 (Homoskedasticity):**
@@ -623,10 +624,12 @@ exp(model_b$coefficients)
 1/exp(model_b$coefficients)
 ```
 
-Here we see that a unit decrease in temperature increases the odds of failure increases by 1.12 times.
+Here we see that a unit decrease in temperature changes the odds of failure by 1.12 times.
 
-In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c (**Figure 4a-b**), we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50°F, 40°F to 30°F, we see corresponding probability of failure $\pi$ values of 0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure. Although the probability of failure rises at lower temperatures, the confidence intervals widen in response to the absence of data. Thus, while launching space ships in the cold is a bad idea, our claims are tempered by uncertainty.
+In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c (**Figure 4a-b**), we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50°F, 40°F to 30°F, we see corresponding probability of failure $\pi$ values of 0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure. Although the probability of failure rises at lower temperatures, the confidence intervals widen in response to the absence of data. To overcome the absence of data at lower temperatures, we attempted the bootstrapping technique to generate more observations. This however failed to narrow the confidence level at the lower temperature of 31 degrees. The wide confidence interval at the temperature of 31 degrees, should be enough justification to postpone the launch on a cold day since it is tempered by uncertainty.
 
-In summary, we explored the relationship to pressure vs failure and temperature vs failure. Conclusions on these relationships should be, as noted above, conditioned on the paucity of data. We note a higher incidence of failures at lower temperatures. Moreover, all but one of the failures occurred at higher pressures. Equipped with more data a test for indepedence could be used to determine if levels of pressure are independent of levels of temperature (say 30-50, 51-70, 71-90 (°F)). Similarly, logistic regression models that captured the relationship between O-ring failure, temperature, pressure and the interaction of the two explanatory variables could reveal important information about physical processes that influence O-ring failure. 
+We evaluated both the binary logistic regression models, where O-ring failure is a dichotomous function of the explanatory variables as well as the binomial logistic regression model. Even though the binary model is the preferred model, since it does not have the assumption of independence across o-ring failures, we settled on the Binomial model as our final model due to the limited number of observations.
 
-Regardless of the limitations and challanges, we learned that (i) launching rockets in cold temperatures is a bad idea and (ii) ignoring data, as NASA ignored the "outling" values where 0 failures occured, can be deadly. Both groups of models, the binary and binomial models, converged on these conclusions. The binary logistic regression models, where O-ring failure is a dichotomous function of the explanatory variables, 
+In summary, we explored the relationship to pressure vs failure and temperature vs failure. Conclusions on these relationships should be, as noted above, conditioned on the paucity of data. We note a higher incidence of failures at lower temperatures. Moreover, all but one of the failures occurred at higher pressures. Equipped with more data a test for independence could be used to determine if levels of pressure are independent of levels of temperature (say 30-50, 51-70, 71-90 (°F)). Similarly, logistic regression models that captured the relationship between O-ring failure, temperature, pressure and the interaction of the two explanatory variables could reveal important information about physical processes that influence O-ring failure. 
+
+Regardless of the limitations and challenges, we learned that (i) launching rockets in cold temperatures is a bad idea and (ii) ignoring data, as NASA ignored the "outlying" values where 0 failures occurred, can be deadly. Both groups of models, the binary and binomial models, converged on these conclusions.
