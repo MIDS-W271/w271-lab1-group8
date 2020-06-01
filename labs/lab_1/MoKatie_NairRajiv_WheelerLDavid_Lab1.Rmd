@@ -61,7 +61,6 @@ library(car) # For Likelihood Ratio Tests on the fly
 library(data.table) # to enable creation and coercion of data tables
 library(stargazer) # to tabulate regression tables
 library(skimr) # for basic EDA
-#library(Hmisc) # for basic EDA
 library(mcprofile) # for profile likelihoods
 library(dplyr) # for coercing dataframes and summary statistic
 #library(boot) # framework for bootstrapping
@@ -107,7 +106,7 @@ The three variables of interest for modeling purposes in the paper by Dalal *et 
 # Temperature distribution
 plot_temp = ggplot(df, aes(x = Temp)) +
   geom_histogram(binwidth = 1, fill="olivedrab", colour="black", alpha=0.7) + 
-  ggtitle("\ndistribution of Temperature, &") +
+  ggtitle("B") +
     scale_x_continuous(name = "Temperature (°F)")+ 
     scale_y_continuous(name = " ")+
   theme(plot.title = element_text(lineheight=1)) +
@@ -124,7 +123,7 @@ plot_temp = ggplot(df, aes(x = Temp)) +
 # Pressure distribution
 plot_pressure = ggplot(df, aes(x = Pressure)) +
   geom_histogram(binwidth = 5, fill="olivedrab", colour="black", alpha=0.7) + 
-  ggtitle("\ndistribution of Pressure") +
+  ggtitle("C") +
   scale_x_continuous(name = "Pressure")+
   scale_y_continuous(name = " ")+ 
   theme(plot.title = element_text(lineheight=1)) +
@@ -146,7 +145,7 @@ plot_oring = ggplot(as.data.frame(table(df)),
     scale_y_continuous(name = "Counts")+
    theme_classic() +
    theme(text = element_text(size = 12)) +
-   labs(title=expression(~bold('Figure 1:\n')~' Distribution of O-ring failures, '))+
+   labs(title=expression(~bold('Figure 1:')~'A'))+
    theme(legend.position = "top") +  
    theme(plot.title = element_text(hjust=0)) + 
    theme(
@@ -182,7 +181,7 @@ plot_temp_o = ggplot(df, aes(x=Temp, y=as.factor(O.ring), colour=O.ring>0)) +
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(title=expression(~bold('Figure 2:')~'O-ring failure as a function of:     temperature (°F)'),
+  labs(title=expression(~bold('Figure 2:')~'A'),
        color="Observations:")+
   theme(legend.position = "top") +  
   theme(plot.title = element_text(hjust=0)) + 
@@ -201,11 +200,11 @@ plot_pressure_o = ggplot(df, aes(x=Pressure, y=as.factor(O.ring), colour=O.ring>
   scale_color_manual(labels = c("ignored by NASA","used by NASA"),
                                 values = rev(c("black","olivedrab"))) +
   scale_x_continuous(name = "Pressure")+
-  #scale_y_discrete(name = "Number of O-ring failures")+
+  scale_y_discrete(name =" ")+
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(title='pressure')+
+  labs(title='B')+
   theme(legend.position = "none") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
@@ -223,11 +222,11 @@ plot_number_o = ggplot(df, aes(x=Flight, y=as.factor(O.ring), colour=O.ring>0)) 
   scale_color_manual(labels = c("ignored by NASA","used by NASA"),
                                 values = rev(c("black","olivedrab"))) +
   scale_x_continuous(name = "Flight number")+
-  #scale_y_discrete(name = "Number of O-ring\n failures")+
+  scale_y_discrete(name = " ")+
   geom_rug(alpha=2/4, size=3, position="jitter") +
   theme_classic() +
   theme(text = element_text(size = 12)) +
-  labs(title='flight number/time') +
+  labs(title='C') +
   theme(legend.position = "none") +
   theme(plot.title = element_text(hjust=0)) + 
   theme(
@@ -249,7 +248,7 @@ In **Figure 2 (b)**, there were the most number of recorded launches at 200 psi,
 
 Based on the description in the paper, we do not anticipate there to be any meaningful relationship between temperature and pressure as they are both arbitrarily determined. Pressure is a condition set by the test procedure, which was first at 50 psi, then progressively updated to 100 psi and 200 psi. Temperature is merely a condition at the time of launch. The low correlation between the two variables, `r round(cor(df$Temp, df$Pressure),3)`, supports our understanding.
 
-## TO DO: add blurb about **Figure 2 (c)** 
+Lastly, **Figure 2 (c)** documents the relationship between the number of O-ring failures and flight number. If flight numbers were not assigned chronologically, then there is little to learn from this plot. However, if flight numbers are ordered chronologically then (i) note that the occurrence of failures *over time* appear nearly random- that is, there is no overt pattern- and (ii) the history of flight attempts is punctuated by episodes of failure.
 
 
 ### Multivariate Analysis
@@ -261,18 +260,30 @@ Based on the description in the paper, we do not anticipate there to be any mean
 colors <- c("olivedrab", "orange", "red")
 colors <- colors[as.numeric(df$O.ring)+1]
 scatterplot3d(x=df$Temp, y=df$Pressure, z=df$O.ring,
-              #angle = 80,
+              angle = 85,
               main= expression(~bold('Figure 3:')~' O-ring failure as a function of temperature and pressure'),
               xlab = "Temperature (°F)",
               ylab = "Pressure",
               zlab = "Number of O-ring failures",
               pch = 20, cex.symbols=3,
               color=colors,
-              grid=TRUE, box=FALSE)
+              grid=TRUE, box=F)
 
+#library(plotly)
+# # Build 3d scatter plot
+# fig <- plot_ly(df, x = ~ Temp, y = ~ Pressure, z = ~ O.ringFactor,
+#                color = ~ O.ringFactor,
+#                colors = c('olivedrab', 'orange2',"orangered2"))
+# fig <- fig %>% add_markers()
+# fig <- fig %>% layout(title=" <b>Figure 5</b>: O-ring failures as a function of temperature (°F) and pressure",
+#   scene = list(xaxis = list(title = 'Temperature (°F)'),
+#                      yaxis = list(title = 'Pressure'),
+#                      zaxis = list(title = 'Number of O-ring failures')))
+# 
+# fig
 ```
 
-## TO DO: add blurb about **Figure 3** 
+In order to understand the multivariate relationship between the number of O-ring failures, temperature, and pressure, we created a 3-dimensional scatterplot (**Figure 3**). The number of O-ring failures is expressed as a function of both temperature and pressure. Green points represent those temperature and pressure conditions where 0 O-rings failed- these were the data ignored by NASA. Similarly, orange and red points represent those conditions under which 1 or 2 O-rings failed, respectively. From **Figure 3** we can see that all but 1 of the cases where at least one or more O-rings failed the pressure was 200 and the temperature was less than `r max(df$Temp[df$O.ring>0])`. Lastly, **please** look at this plot in `plotlly` with the above code that is currently commented out- `scatterplot3d` really fails to capture the integrity of the relationships between these variables.
 
 # Part 2 (20 points)
 
@@ -295,12 +306,10 @@ df["Fail"] <- ifelse(df$O.ring>=1, 1, 0)
 model_binomial <- glm(O.ring/Number ~ Temp + Pressure,
                family = binomial(link = logit),
                weights = Number, data = df)
-
 # Estimate binary logistic regression model
 model_binary <- glm(Fail ~ Temp + Pressure,
                family = binomial(link = logit),
                data = df)
-
 # Summary of coefficients, standard errors and p-values
 stargazer(model_binomial, model_binary, type="text")
 ```
@@ -308,35 +317,38 @@ stargazer(model_binomial, model_binary, type="text")
 Here we estimate the bimonial and binary regression models separately. For the binary model, we introduce a new flag "Fail" that is set to 1 if at least one failure, 0 otherwise. This effectively eliminates the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level. By exponentiating the coefficients and taking inverse, we can interpret the effect of temperature on odds of failure.
 
 **Binomial Model**
-
 $$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} $$
-
 ```{r}
 # Inverse odds ratio for binomial model
 1/exp(summary(model_binomial)$coefficients)
 ```
-
 For the Logistic regression binomial model with `Temperature` and `Pressure` included, we see that a unit decrease in temperature changes the odds of failure by 1.1 times
-
 
 **Binary Model** 
 $$ logit\left(\hat{\pi}\right)= 13.292 - 0.229\text{Temp} + 0.010\text{Pressure} $$ 
-
 ```{r}
 # Inverse odds ratio for binary model
 1/exp(summary(model_binary)$coefficients)
 ```
-
 For the Logistic regression binary model with `Temperature` and `Pressure` included, we see that a unit decrease in temperature changes the odds of failure by 1.25 times.
 
 ```{r, echo=F}
 # Figure 3
 b <- model_binomial$coefficients
-curve(exp(b[1]+b[2]*x + b[3]*200)/(1+exp(b[1]+b[2]*x + b[3]*200)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", col="blue", ylim=c(0,1))
-text(x=40, y=0.7, label="Binomial", col = "Blue", title("Binomial vs Binary Logistic Regression (At Pressure=200)"))
+# Binomial
+curve(exp(b[1]+b[2]*x + b[3]*200)/(1+exp(b[1]+b[2]*x + b[3]*200)),
+      from=30, to=100,
+      xlab="Temperature", ylab=expression(pi),
+      col="blue", lwd=2, ylim=c(0,1))
+text(x=40, y=0.7, label="Binomial", col = "Blue")
+# Binary
 b <- model_binary$coefficients
-curve(exp(b[1]+b[2]*x+ b[3]*200)/(1+exp(b[1]+b[2]*x+ b[3]*200)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", add=TRUE, col="black")
+curve(exp(b[1]+b[2]*x+ b[3]*200)/(1+exp(b[1]+b[2]*x+ b[3]*200)),
+      from=30, to=100, xlab="Temperature",
+      ylab=expression(1-pi), add=TRUE, col="black", lwd=2)
 text(x=65, y=0.7, label="Binary", col = "Black")
+# Title
+title(expression(bold("Figure 4:")~"Binomial vs binary logistic regression (Pressure = 200)"), adj=0)
 ```
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
@@ -378,6 +390,8 @@ stargazer(model_b,  type="text")
 $$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
+Please see **Figure 5** and below for discussion on (i) $\pi$ vs `Temp` without confidence intervals (**Figure 5a**), (ii) $\pi$ vs `Temp` with confidence intervals (**Figure 5b**), and the expected number of failures vs `Temp`(**Figure 5c**).
+
 (c) Include the 95% Wald confidence interval bands for $\pi$ on the plot. Why are the bands much wider for lower temperatures than for higher temperatures?
 
 ```{r}
@@ -394,7 +408,7 @@ CI_higher_pi <- exp(CI_higher_linear)/(1+exp(CI_higher_linear))
 ```{r, echo=F}
 # Figure 4
 # Plot dimensions
-par(mfrow=c(3,1))
+par(mfrow=c(1,3))
 ##### O.ring failure vs temp
 plot(df$Temp, df$O.ring/df$Number,
      xlab=" " ,
@@ -404,7 +418,7 @@ plot(df$Temp, df$O.ring/df$Number,
      xlim=c(31,81),
      ylim=c(0,1))
 # Title
-title(expression(bold("Figure 4:")~pi~"as a function of temperature (°F)"), adj=0)
+title(expression(bold("Figure 5:")~"A"), adj=0)
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
@@ -413,13 +427,13 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x)), add=T)
 
 ##### pi with CI vs temp
 plot(df$Temp, df$O.ring/df$Number,
-     xlab= " ",
+     xlab= "Temperature (°F)",
      ylab=expression(pi),
      pch=20, cex=3,
      xlim=c(31,81),
      ylim=c(0,1))
 # Title
-title(expression("with confidence intervals"), adj=0)
+title(expression("B"), adj=0)
 # Betas
 b0 <- model_b$coefficients[1]
 b1 <- model_b$coefficients[2]
@@ -429,14 +443,14 @@ lines(t, CI_higher_pi, lty = 'dashed')
 
 ##### Expected number of failures vs temp
 plot(df$Temp, df$O.ring,
-     xlab='Temperature (°F)',
+     xlab=' ',
      ylab="Expected number of O-ring failures",
      pch=20, cex=3,
      col="black",
      xlim=c(31,81),
      ylim=c(0,6))
 # Title
-title(expression("expected number of failures as a function of temperature (°F)"), adj=0)
+title(expression("C"), adj=0)
 ## Binomial betas
 # Betas
 b0 <- model_b$coefficients[1]
@@ -547,27 +561,26 @@ quantile(results[,2], probs=c(0.05, 0.95))
 ```
 
 ```{r, echo=F}
-# Figure 5
 # Plot histograms of confidence intervals
 par(mfrow=c(2,1))
 # Histogram for temp = 31
 hist(results[,1],
-     breaks=100,
+     breaks=50,
      col="lightskyblue3",
      xlab=NULL,
-     xlim=c(0,1),ylim=c(0,150),
-     main="31 (°F)", adj=1)
+     xlim=c(0,1),ylim=c(0,900),
+     main="A", adj=1)
 # Title
-title(expression(bold("Figure 5:")~"Probability of failure when temperature:"), adj=0)
+title(expression(bold("Figure 6:")~"Probability of failure when temperature:"), adj=0)
 # Histogram for temp = 72
 hist(results[,2],
      breaks=20,
      col="orangered",
      xlab=NULL,
-     xlim=c(0,1),ylim=c(0,150),
-     main="72 (°F)", adj=1)
+     xlim=c(0,1),ylim=c(0,900),
+     main="B", adj=1)
 ```
-
+From the parametric bootstrapping above we learned (i) the range of estimates for a `Temp` = 31(°F) was very wide (**Figure 6a**), ranging from `r min(results[,1])` to `r max(results[,1])`, (ii) most of the estimates were were near 1 and thereby assigned a high probability of failure and (iii) the range of estimates `Temp` = 72(°F) was relatively narrow, ranging from `r min(results[,2])` to `r max(results[,2])` (**Figure 6b**).
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
 
@@ -605,16 +618,12 @@ model_d = lm(formula = O.ring/Number ~ Temp, data = df, weights = Number)
 # Summary
 stargazer(model_d, type="text")
 ```
-
 $$ \cfrac{O.ring}{Number} = 0.616 - 0.008Temp$$
-
 
 - Explanation of the model results:
 
-
 - Model diagnostics:
 ```{r, echo=F}
-# Figure 6
 # Plot histograms of confidence intervals
 par(mfrow=c(1,2))
 # Residuals vs fitted values
@@ -623,7 +632,7 @@ plot(model_d$fitted.values, model_d$residuals,
      xlab="Fitted values",
      ylab="Residuals")
 # Title
-title(expression(bold("Figure 6:")~"Residual vs. fitted values &"), adj=0)
+title(expression(bold("Figure 7:")~"A"), adj=0)
 # Quantile-quantile plot
 qqnorm(df$O.ring,
      pch=20, cex=2, main=NULL,
@@ -633,7 +642,7 @@ qqnorm(df$O.ring,
 qqline(df$O.ring,
        col="red", lwd=2)
 # Title
-title(expression("Normal q-q plot"), adj=0)
+title(expression("B"), adj=0)
 ```
 
 - Assess the validity of the model assumptions: 
@@ -644,11 +653,11 @@ title(expression("Normal q-q plot"), adj=0)
   - **Assumption MLR.3 (No Perfect Collinearity):**
     - ince there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
   - **Assumption MLR.4 (Zero Conditional Mean):**
-    - The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot: `r plot(model_d, which=1, pch=19, cex=1, cex.lab=1, cex.main=4, lwd=2)` documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
+    - The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot (**Figure 7a**) documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
   - **Assumption MLR.5 (Homoskedasticity):**
-    - Homoskedasticity does not appear to be satisfied. Evidence for heteroskedasticity is again provided by the residual versus fitted values plot: `r plot(model_d, which=1, pch=19, cex=1, cex.lab=1, cex.main=4, lwd=2)`. If variances were homoskedastic we should see uniform horizontal bands/scatters of points across these plots. However, note that we see non-constant variability in the residuals across the range of fitted values.
+    - Homoskedasticity does not appear to be satisfied. Evidence for heteroskedasticity is again provided by the residual versus fitted values plot (**Figure 7a**). If variances were homoskedastic we should see uniform horizontal bands/scatters of points across these plots. However, note that we see non-constant variability in the residuals across the range of fitted values.
   - **Assumption MLR.6 (Normality):**
-    - The assumption of normality is not satisfied. Evidence of this assumption is presented in the qq-plot:`r plot(model_d, which=2, pch=19, cex=1, cex.lab=1, cex.main=4, lwd=2)` & a histogram of the response variable: `r hist(df$O.ring, col="grey")`.
+    - The assumption of normality is not satisfied. Evidence of this assumption is presented in the qq-plot  (**Figure 7b**).
   - **Lastly, this model formulation possesses another shortcomings**:
     - The probabilities are linearly related to the predictors for all of their possible values.
 
