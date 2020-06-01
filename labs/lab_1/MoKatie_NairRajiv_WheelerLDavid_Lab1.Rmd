@@ -467,17 +467,14 @@ curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x))*6, add=T)
 ```{r}
 # Data to extrapolate
 predict.data <- data.frame(Temp = 31)
-
 # Predict surface/link
 predict.linear <- predict(object = model_b,
                           newdata = predict.data,
                           type = "link")
-
 # Predict response 
 predict.pi <- predict(object = model_b, 
                       newdata = predict.data,
                       type = "response")
-
 # Confidence interval for 31deg was computed above in part (c)
 data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 ```
@@ -508,7 +505,6 @@ For our parametric bootstrap procedure, we performed the following steps:
 
 9. Finally, the 5% and 95% quantiles from the predictions for 31 and 72 degrees accumulated in $results$ are reported as the 90% confidence intervals.
 
-
 ```{r warning=FALSE}
 # Set a seed
 set.seed(1)
@@ -530,19 +526,16 @@ for (s in 1:1000){
                      replace = T)
   # Populate d with samples
   d <- df[I.sample,]  
-  
   # Simulate outcomes using rbinom
   O.ring2 <- rbinom(n=23, # sample size
                 size=6, # number of trials
                 prob=d$O.ring.pi) # probability
   d <- data.frame(d, O.ring2)
-  
   # Estimate model with rbinom bootstrap outcomes
   mod <- glm(O.ring2/Number ~ Temp,
                family = binomial(link = logit),
                weights = Number,
                data = d)
-  
   # Estimate confidence interval for temp = 31
   temp.31.data <- data.frame(Temp=31)
   temp.31 <- predict(object = mod, newdata = temp.31.data,
@@ -553,7 +546,6 @@ for (s in 1:1000){
                       type = "response")
   results <- results %>% add_row(pred.31 = temp.31, pred.72 = temp.72)  
 }
-
 paste("For 31 degrees CI =")
 quantile(results[,1], probs=c(0.05, 0.95))
 paste("For 72 degrees CI =")
@@ -621,7 +613,8 @@ stargazer(model_d, type="text")
 $$ \cfrac{O.ring}{Number} = 0.616 - 0.008Temp$$
 
 - Explanation of the model results:
-
+  - To explain the results of the model, we will first forget that we are violating the assumptions discussed below. O-ring failure is negatively affected by temperature. That is, as temperature increases, the risk of O-ring failure decreases. For every incremental increase in temperature, the expected proportion of O-rings that fail drops by `r coef(summary(model_d))["Temp", 1]` with a standard error of  `r coef(summary(model_d))["Temp", 2]`, and *p*-value of `r coef(summary(model_d))["Temp", 4]`. Thus, there is a modest effect of temperature on O-ring failure. Note that, even though we are violating several assumptions, we still reach a similar conclusion- launching rockets in cold weather is a bad idea!
+  
 - Model diagnostics:
 ```{r, echo=F}
 # Plot histograms of confidence intervals
@@ -647,24 +640,24 @@ title(expression("B"), adj=0)
 
 - Assess the validity of the model assumptions: 
   - **Assumption MLR.1 (Linear in Parameters):**
-    - The model is linear in its parameters.The $\hat{\beta} s$ are expressed as additive/linear functions of the response: O-ring failure.
+    * The model is linear in its parameters.The $\hat{\beta} s$ are expressed as additive/linear functions of the response: O-ring failure.
   - **Assumption MLR.2 (Random Sampling):**
-    - It seems doubtful that these O-rings were sampled randomly, or even *sampled* at all- **all** O-rings were likely collected from `r max(df$Flight)` flights. Further survival bias could be introduced by the inability of NASA to collect all O-rings from flights that malfunctioned.
+    * It seems doubtful that these O-rings were sampled randomly, or even *sampled* at all- **all** O-rings were likely collected from `r max(df$Flight)` flights. Further survival bias could be introduced by the inability of NASA to collect all O-rings from flights that malfunctioned.
   - **Assumption MLR.3 (No Perfect Collinearity):**
-    - ince there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
+    * ince there is only one explanatory variable, it is not perfectly collinear with any other explanatory variable.
   - **Assumption MLR.4 (Zero Conditional Mean):**
-    - The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot (**Figure 7a**) documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
+    * The zero-conditional mean assumption,$E(\mu|x_1, x_2, x_3,...,x_k)$, is not satisfied, sensu stricto. The residual versus fitted values plot (**Figure 7a**) documents the extent to which this model violates this assumption. If the zero mean assumption were satisfied, then we should expect to see a horizontal red line, centered at zero. In contrast we see that our estimates of $\hat{\mu}$, the residuals, deviate from this expectation dramatically. 
   - **Assumption MLR.5 (Homoskedasticity):**
-    - Homoskedasticity does not appear to be satisfied. Evidence for heteroskedasticity is again provided by the residual versus fitted values plot (**Figure 7a**). If variances were homoskedastic we should see uniform horizontal bands/scatters of points across these plots. However, note that we see non-constant variability in the residuals across the range of fitted values.
+    * Homoskedasticity does not appear to be satisfied. Evidence for heteroskedasticity is again provided by the residual versus fitted values plot (**Figure 7a**). If variances were homoskedastic we should see uniform horizontal bands/scatters of points across these plots. However, note that we see non-constant variability in the residuals across the range of fitted values.
   - **Assumption MLR.6 (Normality):**
-    - The assumption of normality is not satisfied. Evidence of this assumption is presented in the qq-plot  (**Figure 7b**).
+    * The assumption of normality is not satisfied. Evidence of this assumption is presented in the qq-plot  (**Figure 7b**).
   - **Lastly, this model formulation possesses another shortcomings**:
-    - The probabilities are linearly related to the predictors for all of their possible values.
+    * The probabilities are linearly related to the predictors for all of their possible values.
 
 - Explain why:
 - We select the binary logistic regression model because:
   - The problem is clearly asking a success/failure question. The response, O-ring failure is either binary (e.g. 0 or 1), binomial (e.g. a proportion from 0 to 1), or counts (e.g. 0,1,2,3,...,n) which can ultimately be expressed as a binary or binomial variable.
-  - The MLR assumptions as seen above does not hold and therefore the linear regression model is not suitable for this problem.
+  - The MLR assumptions discussed above do not hold and therefore the linear regression model is not suitable for this problem.
 
 # Part 5 (10 points)
 
@@ -682,12 +675,8 @@ exp(model_b$coefficients)
 
 Here we see that a unit decrease in temperature increases the odds of failure increases by 1.12 times.
 
-In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c, we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50F, 40F to 30F, we see corresponding probability of failure $\pi$ values of  0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure.
+In terms of probability of failure, as is seen in the chart of probability of failure vs temperature in part 3c (**Figure 4a-b**), we clearly see an increase in the probability of failure with lower temperature. For temperature going from 50°F, 40°F to 30°F, we see corresponding probability of failure $\pi$ values of 0.33, 0.61 to 0.83, which clearly shows that lower temperatures lead to a higher probability of failure. Although the probability of failure rises at lower temperatures, the confidence intervals widen in response to the absence of data. Thus, while launching space ships in the cold is a bad idea, our claims are tempered by uncertainty.
 
-In summary, we explored the relationship to pressure vs failure and temperature vs failure. We note a higher incidence of failures at lower temperatures, wheras no strong evidence of a relationship to pressure was identified. 
+In summary, we explored the relationship to pressure vs failure and temperature vs failure. Conclusions on these relationships should be, as noted above, conditioned on the paucity of data. We note a higher incidence of failures at lower temperatures. Moreover, all but one of the failures occurred at higher pressures. Equipped with more data a test for indepedence could be used to determine if levels of pressure are independent of levels of temperature (say 30-50, 51-70, 71-90 (°F)). Similarly, logistic regression models that captured the relationship between O-ring failure, temperature, pressure and the interaction of the two explanatory variables could reveal important information about physical processes that influence O-ring failure. 
 
-- EDA
-- Potential importance of pressure
-- Reasons for binary vs binomial
-- Interpretation of odds ratios & pi at extreme temperaturs
-- Challenges introduced by small data set (at lower temperatures)
+Regardless of the limitations and challanges, we learned that (i) launching rockets in cold temperatures is a bad idea and (ii) ignoring data, as NASA ignored the "outling" values where 0 failures occured, can be deadly. Both groups of models, the binary and binomial models, converged on these conclusions. The binary logistic regression models, where O-ring failure is a dichotomous function of the explanatory variables, 
