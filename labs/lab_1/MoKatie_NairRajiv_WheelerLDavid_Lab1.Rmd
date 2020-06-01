@@ -280,23 +280,22 @@ Answer the following from Question 4 of Bilder and Loughin Section 2.4 Exercises
 
 (a) The authors use logistic regression to estimate the probability an O-ring will fail. In order to use this model, the authors needed to assume that each O-ring is independent for each launch. Discuss why this assumption is necessary and the potential problems with it. Note that a subsequent analysis helped to alleviate the authors’ concerns about independence.
 
-The authors state that the binomial but not the binary model suffer from the assumption that each O-ring failure is independent. More specifically, the binomial model assumes that each of the six 0-rings fail independently at each temperature, $t$, and pressure, $s$. This assumption is likely to be violated since the failure of 1 or more of the O-rings influences the failure of the remaining O-rings. Moreover, the binary logistic regression model does not suffer from this assumption since each *trial* is a flight and we assume the flights are independent. 
+The authors explore the use of the binomial and the binary models for the given launch data. The independence assumption is necessary for both models because it allows the use of the binomial probability mass function. However, the binomial model likely violates the assumption that each of the six 0-rings would fail independently at each temperature, $t$, and pressure, $s$. The failure of 1 or more of the O-rings could potentially influence the failure of the remaining O-rings, possibly due to exposure to damaging conditions or additional stress. On the other hand, the binary logistic regression model satisfies this assumption since each trial combines the success or failure of all 6 O-rings as one outcome, which is more likely to be independent from launch to launch. To enable the binary logistic regression model, the authors introduced a binary flag for failure, where one or more O-ring failures were simply marked as a failure.
 
-The independence assumption is necessary for the binomial model because it allows us to use the binomial probability mass function. Moreover, the assumption is likely violated since the failure of 1 0-ring might expose other 0-rings to damaging conditions and or might exert stress on the remaining 0-rings.
-
-The authors subsequently used a binary logistic regression model by introducing a binary flag for failure. One or more failures were simply marked as a failure, thereby removing the independence assumption.
-
+The authors found that the fits between the the binomial and the binary models were comparable. Furthermore, the outcomes for the binary and binomial models are not substantially different, as only 2 launches had 2 primary O-ring failures and the majority of the launches corresponded to 0 or 1 O-rings failures. Because of the analysis, we were comfortable with using the binomial model, despite the likely violation of the independence assumption. Because the dataset itself is quite limited with only 23 flight launches, a binomial model is able to make use of all 6 data points from each launch, while the binary model compresses the information for the 6 O-rings into a single data point. 
 
 (b) Estimate the logistic regression model using the explanatory variables in a linear form.
 
 ```{r, warning=F}
+# Create new variable Fail for binary model
 df["Fail"] <- ifelse(df$O.ring>=1, 1, 0)
-# Estimate binomial logistic regression model
+
+# Estimate a binomial logistic regression model
 model_binomial <- glm(O.ring/Number ~ Temp + Pressure,
                family = binomial(link = logit),
                weights = Number, data = df)
 
-# Estimate binary logistic regression model
+# Estimate a binary logistic regression model
 model_binary <- glm(Fail ~ Temp + Pressure,
                family = binomial(link = logit),
                data = df)
@@ -305,7 +304,7 @@ model_binary <- glm(Fail ~ Temp + Pressure,
 stargazer(model_binomial, model_binary, type="text")
 ```
 
-Here we estimate the bimonial and binary regression models separately. For the binary model, we introduce a new flag "Fail" that is set to 1 if at least one failure, 0 otherwise. This effectively eliminates the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level. By exponentiating the coefficients and taking inverse, we can interpret the effect of temperature on odds of failure.
+Here we estimate the bimonial (1) and binary (2) regression models separately. For the binary model, we introduced a new flag variable "Fail" that is set to 1 if at least one failure, and 0 otherwise, which helps satisfy the independence assumption. From the above model summary, we see that Temperature is the only significant variable at the 0.05 level for both models. By exponentiating the coefficients and taking inverse, we can interpret the effect of temperature on odds of failure.
 
 **Binomial Model**
 
@@ -318,7 +317,6 @@ $$ logit\left(\hat{\pi}\right)= 2.520 - 0.098\text{Temp} + 0.008\text{Pressure} 
 
 For the Logistic regression binomial model with `Temperature` and `Pressure` included, we see that a unit decrease in temperature changes the odds of failure by 1.1 times
 
-
 **Binary Model** 
 $$ logit\left(\hat{\pi}\right)= 13.292 - 0.229\text{Temp} + 0.010\text{Pressure} $$ 
 
@@ -329,33 +327,22 @@ $$ logit\left(\hat{\pi}\right)= 13.292 - 0.229\text{Temp} + 0.010\text{Pressure}
 
 For the Logistic regression binary model with `Temperature` and `Pressure` included, we see that a unit decrease in temperature changes the odds of failure by 1.25 times.
 
-```{r, echo=F}
-# Figure 3
-b <- model_binomial$coefficients
-curve(exp(b[1]+b[2]*x + b[3]*200)/(1+exp(b[1]+b[2]*x + b[3]*200)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", col="blue", ylim=c(0,1))
-text(x=40, y=0.7, label="Binomial", col = "Blue", title("Binomial vs Binary Logistic Regression (At Pressure=200)"))
-b <- model_binary$coefficients
-curve(exp(b[1]+b[2]*x+ b[3]*200)/(1+exp(b[1]+b[2]*x+ b[3]*200)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", add=TRUE, col="black")
-text(x=65, y=0.7, label="Binary", col = "Black")
-```
 
 (c) Perform LRTs to judge the importance of the explanatory variables in the model.
 
-Below we test: $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for both `Temp` and `Pressure`:
+Below we test $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for both `Temp` and `Pressure`, for the binomial model:
 
 ```{r}
 Anova(model_binomial, test='LR')
 ```
 
-As discussed below `Temp` but not `Pressure` is important for the model.
-
 (d) The authors chose to remove Pressure from the model based on the LRTs. Based on your results, discuss why you think this was done. Are there any potential problems with removing this variable?
 
-- `Pressure` is not an important explanatory variable. 
-- Above, we tested $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for `Pressure`.The $-2log(\Lambda)$ = `r Anova(model_binomial, test='LR')[2,1]` and the *p*-value of $P\left(\chi^2_1 > \right.$ `r Anova(model_binomial, test='LR')[2,1]`) = `r Anova(model_binomial, test='LR')[2,3]` > $\alpha$ 0.05. 
-- Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test & because it does not contribute much systematic variation to the model (i.e `Pressure` can only take values `r unique(df$Pressure)`). 
-- Although it was removed, it *could* be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Similarly, the Dalal *et al* 1989 report (i) very weak evidence of a pressure effect and (ii) overlapping confidence intervals for the expected number of incidents when pressure was 50 and 200. Together these bits of evidence support the hypothesis that `Pressure` could contribute to the mechanism by which `O.rings` fail.
-- Several problems could arise by the omission of `Pressure` from the model. These problems are both mechanistic and statistical. The mechanistic problem is outline in Dalal *et al* 1989. `O.ring` function and failure are highly influenced by `Pressure`. Thus, while a simple model without `Pressure` might be *sufficient* for ones purposes, a model with `Pressure` and, if more data existed, an interaction term between `Temp` and `Pressure` might help guide interpretation. The statistical problem(s) of removing `Pressure` could be numerous. For one, if `Pressure` is *correlated* with both the explanatory variable `Temp` and the outcome `O.ring`, removal of `Pressure` could introduce omitted variable bias.
+Based on the likelihood ratio test above, `Pressure` is not an important explanatory variable and could be removed from the model. We tested $H_0: \beta = 0$ vs $H_A:\beta \neq 0$, for `Pressure`.The $-2log(\Lambda)$ = `r Anova(model_binomial, test='LR')[2,1]` and the *p*-value of $P\left(\chi^2_1 > \right.$ `r Anova(model_binomial, test='LR')[2,1]`) = `r Anova(model_binomial, test='LR')[2,3]` > $\alpha$ 0.05. 
+
+Thus, `Pressure` was probably removed in response to it lack of importance detected by the likelihood ratio test and because it does not contribute much systematic variation to the model (i.e `Pressure` can only take values `r unique(df$Pressure)`). Although it was removed, it still could be an important covariate to include in the model. For example, recall from **Figure 3** that (i) both instances where 2 `O.ring`s failed occured when `Pressure` was high = $200$ and (ii) `r length(df$Pressure[df$O.ring == 1 & df$Pressure == 200])` of `r length(df$Pressure[df$O.ring == 1])` instances where 1 `O.ring` failed occured when `Pressure` was high = $200$. Similarly, the authors report (i) very weak evidence of a pressure effect and (ii) overlapping confidence intervals for the expected number of incidents when pressure was 50 and 200. Together these bits of evidence support the hypothesis that `Pressure` could contribute to the mechanism by which `O.rings` fail.
+
+Potential problesm could arise by the omission of `Pressure` from the model, however we are unable to draw conclusions on the value of `Pressure` with such limited variation in the data. While a simple model without `Pressure` might be sufficient, a model with `Pressure`, if more data existed, and an interaction term between `Temp` and `Pressure` might help guide interpretation. If `Pressure` is correlated with both the explanatory variable `Temp` and the outcome `O.ring`, removal of `Pressure` could introduce omitted variable bias.
 
 # Part 3 (35 points)
 
@@ -372,10 +359,22 @@ model_b <- glm(O.ring/Number ~ Temp,
                weights = Number,
                data = df)
 # Summary of coefficients, standard errors and p-values
-stargazer(model_b,  type="text")
+stargazer(model_b,model_b2,  type="text")
 ```
 
 $$logit\left(\hat{\pi}\right) = 5.085 - 0.116 Temp$$
+## Maybe remove this since it doesn't match the one in the paper?
+
+```{r, echo=F}
+# Figure 3
+b <- model_b$coefficients
+curve(exp(b[1]+b[2]*x)/(1+exp(b[1]+b[2]*x)), from=30, to=100, xlab="Temperature", ylab="Probability of failure", col="blue", ylim=c(0,1))
+text(x=40, y=0.7, label="Binomial", col = "Blue", title("Binomial vs Binary Logistic Regression"))
+#b <- model_b2$coefficients
+curve(1-(1-(exp(b[1]+b[2]*x)/(1+exp(b[1]+b[2]*x))))^6, from=30, to=100, xlab="Temperature", ylab="Probability of failure", add=T, col="black")
+text(x=65, y=0.7, label="Binary", col = "Black")
+```
+
 (b) Construct two plots: (1) $\pi$ vs. Temp and (2) Expected number of failures vs. Temp. Use a temperature range of 31° to 81° on the x-axis even though the minimum temperature in the data set was 53°.
 
 (c) Include the 95% Wald confidence interval bands for $\pi$ on the plot. Why are the bands much wider for lower temperatures than for higher temperatures?
@@ -394,7 +393,7 @@ CI_higher_pi <- exp(CI_higher_linear)/(1+exp(CI_higher_linear))
 ```{r, echo=F}
 # Figure 4
 # Plot dimensions
-par(mfrow=c(3,1))
+#par(mfrow=c(3,1))
 ##### O.ring failure vs temp
 plot(df$Temp, df$O.ring/df$Number,
      xlab=" " ,
@@ -445,11 +444,10 @@ b1 <- model_b$coefficients[2]
 curve(expr = exp(b0+b1*x)/(1+exp(b0+b1*x))*6, add=T)
 ```
 
-- The confidence band is wider when temperatures are lower than`r min(df$Temp)` because there are no observations below `r min(df$Temp)`.
+The confidence band is wider when temperatures are lower than`r min(df$Temp)` because there are no observations below `r min(df$Temp)`.
 
 (d) The temperature was 31° at launch for the Challenger in 1986. Estimate the probability of an O-ring failure using this temperature, and compute a corresponding confidence interval. Discuss what assumptions need to be made in order to apply the inference procedures.
 
-- The probability of O-ring failure when temperature is 31°:
 ```{r}
 # Data to extrapolate
 predict.data <- data.frame(Temp = 31)
@@ -464,13 +462,13 @@ predict.pi <- predict(object = model_b,
                       newdata = predict.data,
                       type = "response")
 
-# Confidence interval for 31deg was computed above in part (c)
+# Confidence interval for 31deg was computed above in part(c)
 data.frame(estimate=predict.pi, lower=CI_lower_pi[[1]], upper=CI_higher_pi[[1]])
 ```
-- Thus, the probability of O-ring failure at 31° is `r predict.pi` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`.
-- The assumptions needed to apply the inference procedures are:
-  - We are assuming a linear relationship between the log odds of failure of an O-ring and Temperature.
-  - Since we are using the binary logistic model, each flight/*trial* is independent of other flights.
+
+The probability of O-ring failure at 31° is `r predict.pi` with a very wide confidence interval of `r c(CI_lower_pi[[1]], CI_higher_pi[[1]])`. 
+
+In order to infer the probability of O-ring failure at 31°, we need to make the assumption that there is a linear relationship between the log odds of failure of an O-ring and Temperature. Because we use the binomial model, we do not meet the independence assumption. However, the fits between the binomial and binary models are comparable, as discussed above. 
  
 (e) Rather than using Wald or profile LR intervals for the probability of failure, Dalal *et al.* (1989) use a parametric bootstrap to compute intervals. Their process was to (1) simulate a large number of data sets (n = 23 for each) from the estimated model of  Temp; (2) estimate new models for each data set, say and (3) compute  at a specific temperature of interest. The authors used the 0.05 and 0.95 observed quantiles from the  simulated distribution as their 90% confidence interval limits. Using the parametric bootstrap, compute 90% confidence intervals separately at temperatures of 31° and 72°.27. At the end, the CI will be the 0.05 and 0.95 quantile of the accumumated results.
 
@@ -493,7 +491,6 @@ For our parametric bootstrap procedure, we performed the following steps:
 8. Steps 4-7 are repeated and performed for a total of 1000 times.
 
 9. Finally, the 5% and 95% quantiles from the predictions for 31 and 72 degrees accumulated in $results$ are reported as the 90% confidence intervals.
-
 
 ```{r warning=FALSE}
 # Set a seed
@@ -540,11 +537,13 @@ for (s in 1:1000){
   results <- results %>% add_row(pred.31 = temp.31, pred.72 = temp.72)  
 }
 
-paste("For 31 degrees CI =")
-quantile(results[,1], probs=c(0.05, 0.95))
-paste("For 72 degrees CI =")
-quantile(results[,2], probs=c(0.05, 0.95))
+CI.31 <- quantile(results[,1], probs=c(0.05, 0.95))
+CI.72 <- quantile(results[,2], probs=c(0.05, 0.95))
+
+data.frame(temp=c(31,72), lower.CI=c(CI.31[1],CI.72[1]), upper.CI=c(CI.31[2],CI.72[2]))
 ```
+
+Using the parametric bootstrap method to estimate confidence interval, we again found that the confidence interval for 31 degrees F is quite wide at `r round(CI.31[1],4)` and `r round(CI.31[2],4)`, due to the lack of data points at low temperatures. The confidence interval estimated for 72 degrees F is much tighter, at `r round(CI.72[1],4)` and `r round(CI.72[2],4)`. 
 
 ```{r, echo=F}
 # Figure 5
@@ -563,36 +562,32 @@ title(expression(bold("Figure 5:")~"Probability of failure when temperature:"), 
 hist(results[,2],
      breaks=20,
      col="orangered",
-     xlab=NULL,
+     xlab=expression(pi),
      xlim=c(0,1),ylim=c(0,150),
      main="72 (°F)", adj=1)
 ```
 
+Out of the 1000 simulated datasets, we plotted a histogram of their probability of failures. The confidence intervals were taken as the 5th and 95th percentile of the distributions. The probability of failures for 31 degrees F took on the full range of 0 and 1, and had a left skew. In contrast, the probability of failures for 72 degrees F were more concentrated at the left end towards 0. 
 
 (f) Determine if a quadratic term is needed in the model for the temperature.
 
-- Add quadratic temperature term
 ```{r warning=FALSE}
 # Estimate logistic regression model
 model_c <- glm(O.ring/Number ~ Temp + I(Temp^2),
                family = binomial(link = logit),
-               weights = Number,
-               data = df)
+               weights = Number, data = df)
 # Summary of coefficients, standard errors and p-values
 stargazer(model_c, type="text")
 ```
 
 $$ logit\left(\hat{\pi}\right)=22.126 -0.651Temp + 0.004Temp^2 $$ 
 
-- Conduct LRT:
 ```{r}
 # Compare models with LRT
 anova(model_b, model_c, test="Chisq")
 ```
 
-- No, there is no need for a quadratic term. 
-- We tested $H_0: \beta_2{\text{temp}^2} = 0$ vs $H_A: \beta_2{\text{temp}^2} \neq 0$.
-- For `temp^2`, $-2log(\Lambda)$ = `r anova(model_b, model_c, test="Chisq")[2,4]` and the *p*-value of $P\left(\chi^2_1 > \right.$ `r anova(model_b, model_c, test="Chisq")[2,4]`) = `r anova(model_b, model_c, test="Chisq")[2,5]` > $\alpha = 0.05$. Thus, `temp^2` is not important, when we hold `temp` constant.
+To test whether a quadratic term is needed, we specified a new model for `Temp` using both its linear and quadratic form. We tested $H_0: \beta_2{\text{temp}^2} = 0$ vs $H_A: \beta_2{\text{temp}^2} \neq 0$. For `temp^2`, $-2log(\Lambda)$ = `r anova(model_b, model_c, test="Chisq")[2,4]` and the *p*-value of $P\left(\chi^2_1 > \right.$ `r anova(model_b, model_c, test="Chisq")[2,4]`) = `r anova(model_b, model_c, test="Chisq")[2,5]` > $\alpha = 0.05$. Thus, `Temp^2` is not important, when we hold `Temp` constant.  
 
 # Part 4 (10 points)
 
